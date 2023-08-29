@@ -13,12 +13,12 @@ sidebar_width = 0.12
 sidebar_item_height = 0.06
 sidebar_item_font = "Arial"
 sidebar_init_font_size = 16
-sidebar_item_font_color = RGBColor(0, 0, 0)
-sidebar_color = RGBColor(*hex_to_rgb("#358597"))
-sidebar_color_outline = RGBColor(*hex_to_rgb("#358597"))
+sidebar_item_font_color = RGBColor(255, 255, 255)
+sidebar_color = RGBColor(*hex_to_rgb("#5A5A5A"))
+sidebar_color_outline = RGBColor(*hex_to_rgb("#FFFFFF"))
 sidebar_transparency = 50000  # 50% transparency, alpha * 100000)
 
-indicator_color = RGBColor(*hex_to_rgb("#F4A896"))
+indicator_color = RGBColor(*hex_to_rgb("#111111"))
 indicator_transparency = 80000
 
 
@@ -129,18 +129,17 @@ def set_sidebar_timeline(ppt, tags: list[int]):
 
 
 if __name__ == "__main__":
-    path_ppt = Path("out", "presentation.pptx")
+    path_ppt = Path("out", "tbm_ppt.pptx")
     tags = [
-        "Title",
-        "Aims",
-        "Aims",
-        "Methods",
-        "Results",
+        "Background",
+        "Objectives",
+        "Data",
+        "Curation",
+        "Training",
+        "Post Analysis",
+        "Post Analysis",
         "Limitations",
-        "Considerations",
-        "Impact",
-        "Impact",
-        "Thank You",
+        "References",
     ]
 
     example_ppt = Presentation(path_ppt)
