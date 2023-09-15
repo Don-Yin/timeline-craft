@@ -4,7 +4,7 @@
 This project is about adding a timeline (with smooth transitions) in Microsoft PowerPoint slides.
 
 ## Demo
-[video here]
+[![Video]](https://github.com/Don-Yin/powerpoint-timeline/blob/3e8e3afc2def008de3202e4e5b46f5649d571d02/public/demo.mp4)
 
 ## Preview Compare
 |      Before Processing       |      After Processing      |
