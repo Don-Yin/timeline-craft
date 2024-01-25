@@ -10,33 +10,33 @@ from src.utils.paragraph import add_paragraph, amend_font
 
 def move_elements_to_right(ppt, sidebar_width=0.12):
     """
-    Moving all placeholders and images to the right of the screen (the content area)
-    Note: later reduce the font size
-    Note: the bullet pint issue is not caused by this function.
+    Moves all placeholders and images to the right of the screen, shrinking them while maintaining their
+    original aspect ratio, and ensuring their vertical centers remain in the same position.
     """
     for slide in ppt.slides:
         for shape in slide.shapes:
-            top, height, left, width = shape.top, shape.height, shape.left, shape.width
+            # Original dimensions and positions
+            original_top = shape.top
+            original_left = shape.left
+            original_height = shape.height
+            original_width = shape.width
 
-            right = left + width
-            # bottom = top + height
-
-            loc_left = left / ppt.slide_width
-            loc_right = right / ppt.slide_width
-            # loc_top = top / ppt.slide_width
-            # loc_bottom = bottom / ppt.slide_width
-
+            # Calculate scale factor for width
             content_space_width = ppt.slide_width * (1 - sidebar_width)
-            new_left = ppt.slide_width * sidebar_width + (
-                loc_left * content_space_width
-            )
-            new_right = ppt.slide_width * sidebar_width + (
-                loc_right * content_space_width
-            )
-            new_width = new_right - new_left
+            scale_factor = content_space_width / ppt.slide_width
 
+            # New dimensions
+            new_width = original_width * scale_factor
+            new_height = original_height * scale_factor
+
+            # New positions
+            new_left = ppt.slide_width * sidebar_width + (original_left - original_width / 2) * scale_factor + new_width / 2
+            vertical_center_offset = (original_height - new_height) / 2
+            new_top = original_top + vertical_center_offset
+
+            # Apply new dimensions and positions
             shape.left, shape.width = int(new_left), int(new_width)
-            shape.top, shape.height = int(top), int(height)
+            shape.top, shape.height = int(new_top), int(new_height)
 
 
 def merge_tags(tags: list[str]) -> list[str]:
@@ -66,9 +66,7 @@ def set_sidebar_timeline(
     indicator_color,
     indicator_transparency,
 ):
-    assert len(tags) == len(
-        ppt.slides
-    ), f"The number of tags: {len(tags)} has to match the number of slides: {len(ppt.slides)}"
+    assert len(tags) == len(ppt.slides), f"The number of tags: {len(tags)} has to match the number of slides: {len(ppt.slides)}"
 
     # merge the adjacent slides with the same tag
     merged_tags = merge_tags(tags)
@@ -76,9 +74,7 @@ def set_sidebar_timeline(
     # adding the base shapes to each slide
     for slide in ppt.slides:
         # ------------------------ shaping the sidebar itself ------------------------
-        sidebar = slide.shapes.add_shape(
-            MSO_SHAPE.RECTANGLE, 0, 0, ppt.slide_width * sidebar_width, ppt.slide_height
-        )
+        sidebar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, ppt.slide_width * sidebar_width, ppt.slide_height)
         sidebar.name = "!!SIDEBAR"
         sidebar.fill.solid()
         sidebar.fill.fore_color.rgb = sidebar_color
