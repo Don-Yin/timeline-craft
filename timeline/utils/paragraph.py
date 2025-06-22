@@ -5,9 +5,7 @@ from pptx.enum.text import MSO_AUTO_SIZE, MSO_ANCHOR, PP_PARAGRAPH_ALIGNMENT
 def amend_font(placeholder, font_family, font_size, bold):
     try:
         text_frame = placeholder.text_frame
-        text_frame.fit_text(
-            font_family=font_family, bold=bold, italic=False, max_size=font_size
-        )
+        text_frame.fit_text(font_family=font_family, bold=bold, italic=False, max_size=font_size)
     except TypeError:
         amend_font(placeholder, font_family, font_size - 1, bold)
 
@@ -45,9 +43,7 @@ def add_paragraph(
     paragraph.alignment = PP_PARAGRAPH_ALIGNMENT.LEFT
 
     try:
-        text_frame.fit_text(
-            font_family=font_family, bold=False, italic=False, max_size=font_size
-        )
+        text_frame.fit_text(font_family=font_family, bold=False, italic=False, max_size=font_size)
     except TypeError:
         add_paragraph(
             placeholder,
