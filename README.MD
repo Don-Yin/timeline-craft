@@ -8,41 +8,28 @@ This project is about adding a timeline (with smooth transitions) in Microsoft P
 
 ## Preview Compare
 |      Before Processing       |      After Processing      |
-|:----------------------------:|:--------------------------:|
+| :--------------------------: | :------------------------: |
 | ![Before](public/before.png) | ![After](public/after.png) |
 
 
 ## Use
 
 ```python
-tags = [
-    "Background",
-    "Objectives",
-    "Data",
-    "Curation",
-    "Training",
-    "Post Analysis",
-    "Post Analysis",
-    "Limitations",
-    "References",
-]
-example_ppt = Presentation(path_ppt)
-```
-# Configurations
-The width of this timeline, color, outline of the pointer are all configurable:
+from pathlib import Path
+from pptx import Presentation
+from timeline import set_sidebar_timeline, move_elements_to_right
 
-```python
-sidebar_width = 0.12
-sidebar_item_height = 0.06
-sidebar_item_font = "Arial"
-sidebar_init_font_size = 16
-sidebar_item_font_color = RGBColor(255, 255, 255)
-sidebar_color = RGBColor(*hex_to_rgb("#5A5A5A"))
-sidebar_color_outline = RGBColor(*hex_to_rgb("#FFFFFF"))
-sidebar_transparency = 50000  # 50% transparency, alpha * 100000)
 
-indicator_color = RGBColor(*hex_to_rgb("#111111"))
-indicator_transparency = 80000
+if __name__ == "__main__":
+    path_ppt = Path("/Users/donyin/Desktop/example.pptx")
+    tags = ["Intro"] * 33
+
+    example_ppt = Presentation(path_ppt)
+
+    move_elements_to_right(example_ppt, sidebar_width=0.12)
+    set_sidebar_timeline(ppt=example_ppt, tags=tags)
+
+    example_ppt.save(path_ppt.parent / "timeline.pptx")
 ```
 
 # Disclaimer
