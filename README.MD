@@ -1,5 +1,5 @@
 
-# TimeLineCraft: Timeline for PowerPoint
+# Timeline for PowerPoint
 
 This project is about adding a timeline (with smooth transitions) in Microsoft PowerPoint slides.
 

@@ -3,9 +3,13 @@ import collections.abc
 from pptx.enum.shapes import MSO_SHAPE
 
 
-from src.utils.shapes import set_shape_transparency, send_backwards
-from src.utils.placeholder import add_placeholder
-from src.utils.paragraph import add_paragraph, amend_font
+from timeline.utils.shapes import set_shape_transparency, send_backwards
+from timeline.utils.placeholder import add_placeholder
+from timeline.utils.paragraph import add_paragraph, amend_font
+
+
+from pptx.dml.color import RGBColor
+from webcolors import name_to_rgb, hex_to_rgb
 
 
 def move_elements_to_right(ppt, sidebar_width=0.12):
@@ -54,17 +58,17 @@ def merge_tags(tags: list[str]) -> list[str]:
 
 def set_sidebar_timeline(
     ppt,
-    tags: list[int],
-    sidebar_width,
-    sidebar_transparency,
-    sidebar_color,
-    sidebar_color_outline,
-    sidebar_item_height,
-    sidebar_init_font_size,
-    sidebar_item_font,
-    sidebar_item_font_color,
-    indicator_color,
-    indicator_transparency,
+    tags: list[str],
+    sidebar_width=0.12,
+    sidebar_transparency=50000,
+    sidebar_color=RGBColor(*hex_to_rgb("#5A5A5A")),
+    sidebar_color_outline=RGBColor(*hex_to_rgb("#FFFFFF")),
+    sidebar_item_height=0.06,
+    sidebar_init_font_size=16,
+    sidebar_item_font="Arial",
+    sidebar_item_font_color=RGBColor(255, 255, 255),
+    indicator_color=RGBColor(*hex_to_rgb("#111111")),
+    indicator_transparency=80000,
 ):
     assert len(tags) == len(ppt.slides), f"The number of tags: {len(tags)} has to match the number of slides: {len(ppt.slides)}"
 
