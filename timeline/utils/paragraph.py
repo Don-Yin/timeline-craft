@@ -42,15 +42,15 @@ def add_paragraph(
     paragraph.space_before = 0
     paragraph.space_after = 0
     paragraph.alignment = PP_PARAGRAPH_ALIGNMENT.LEFT
-    
+
     # Explicitly remove bullet formatting by modifying XML
     pPr = paragraph._element.get_or_add_pPr()
     # Remove any existing bullet elements first
     for child in list(pPr):
-        if 'bu' in child.tag:
+        if "bu" in child.tag:
             pPr.remove(child)
     # Add buNone element to disable bullets
-    buNone = OxmlElement('a:buNone')
+    buNone = OxmlElement("a:buNone")
     pPr.insert(0, buNone)
 
     try:
