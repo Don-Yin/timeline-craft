@@ -13,7 +13,7 @@ if requirements_path.exists():
 
 setup(
     name="timeline-craft",
-    version="0.0.2",
+    version="0.0.3",
     packages=find_packages(),
     install_requires=install_requires,
     author="Don Yin",
