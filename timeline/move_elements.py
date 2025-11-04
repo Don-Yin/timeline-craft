@@ -114,3 +114,55 @@ def set_sidebar_timeline(ppt, tags: list[str], config=None):
             offset += config.sidebar_item_height
 
         send_backwards(slide, sidebar)
+
+
+def set_morph_transitions(ppt, config=None):
+    """apply morph transitions to all slides with configurable duration"""
+    config = config or Configurations()
+
+    for slide in ppt.slides:
+        from lxml.etree import Element, SubElement, QName
+
+        sld = slide.element
+
+        ns_p = "http://schemas.openxmlformats.org/presentationml/2006/main"
+        ns_mc = "http://schemas.openxmlformats.org/markup-compatibility/2006"
+        ns_p14 = "http://schemas.microsoft.com/office/powerpoint/2010/main"
+        ns_p172 = "http://schemas.microsoft.com/office/powerpoint/2015/09/main"
+
+        existing_alt = sld.find(QName(ns_mc, "AlternateContent"))
+        if existing_alt is not None:
+            sld.remove(existing_alt)
+
+        existing_trans = sld.find(QName(ns_p, "transition"))
+        if existing_trans is not None:
+            sld.remove(existing_trans)
+
+        cSld = sld.find(QName(ns_p, "cSld"))
+        clrMapOvr = sld.find(QName(ns_p, "clrMapOvr"))
+
+        if clrMapOvr is not None:
+            idx = list(sld).index(clrMapOvr) + 1
+        elif cSld is not None:
+            idx = list(sld).index(cSld) + 1
+        else:
+            continue
+
+        nsmap = {"mc": ns_mc, "p": ns_p, "p14": ns_p14, "p172": ns_p172}
+
+        alt_content = Element(QName(ns_mc, "AlternateContent"), nsmap=nsmap)
+
+        choice = SubElement(alt_content, QName(ns_mc, "Choice"))
+        choice.set("Requires", "p159")
+
+        trans_choice = SubElement(choice, QName(ns_p, "transition"))
+        trans_choice.set(QName(ns_p14, "dur"), str(int(config.transition_duration * 1000)))
+
+        morph = SubElement(trans_choice, QName(ns_p172, "morph"))
+        morph.set("option", "byObject")
+
+        fallback = SubElement(alt_content, QName(ns_mc, "Fallback"))
+        trans_fallback = SubElement(fallback, QName(ns_p, "transition"))
+        fade = SubElement(trans_fallback, QName(ns_p, "fade"))
+
+        sld.insert(idx, alt_content)

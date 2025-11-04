@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "timeline-craft"
-version = "0.1.1"
+version = "0.1.2"
 description = "A Python library for creating timeline visualizations in PowerPoint"
 readme = "README.MD"
 requires-python = ">=3.12"

@@ -16,3 +16,5 @@ class Configurations:
         self.sidebar_item_font_color = kwargs.get("sidebar_item_font_color", RGBColor(255, 255, 255))
         self.indicator_color = kwargs.get("indicator_color", RGBColor(*hex_to_rgb("#111111")))
         self.indicator_transparency = kwargs.get("indicator_transparency", 80000)
+        self.transition_duration = kwargs.get("transition_duration", 0.3)
+        self.apply_morph_transition = kwargs.get("apply_morph_transition", True)

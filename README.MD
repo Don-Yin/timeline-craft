@@ -3,7 +3,7 @@ this project is about adding a timeline (with smooth transitions) in microsoft p
 
 # todo
 - [x] make all config separate
-- [ ] do the auto transition
+- [x] do the auto transition
 - [ ] wbs and pack in saas
 
 # demo
@@ -20,7 +20,7 @@ this project is about adding a timeline (with smooth transitions) in microsoft p
 ```python
 from pathlib import Path
 from pptx import Presentation
-from timeline import set_sidebar_timeline, move_elements_to_right, Configurations
+from timeline import set_sidebar_timeline, move_elements_to_right, set_morph_transitions, Configurations
 
 
 if __name__ == "__main__":
@@ -33,10 +33,13 @@ if __name__ == "__main__":
         sidebar_width=0.12,
         sidebar_item_height=0.10,
         sidebar_init_font_size=18,
+        transition_duration=0.3,
+        apply_morph_transition=True,
     )
 
     move_elements_to_right(example_ppt, config=config)
     set_sidebar_timeline(ppt=example_ppt, tags=tags, config=config)
+    set_morph_transitions(example_ppt, config=config)
 
     example_ppt.save(path_ppt.parent / "timeline.pptx")
 ```
