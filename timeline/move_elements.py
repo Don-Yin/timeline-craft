@@ -9,7 +9,7 @@ from timeline.configurations import Configurations
 def move_elements_to_right(ppt, config=None):
     """moves all placeholders and images to the right of the screen, shrinking them while maintaining their original aspect ratio, and ensuring their vertical centers remain in the same position"""
     config = config or Configurations()
-    
+
     for slide in ppt.slides:
         for shape in slide.shapes:
             # original dimensions and positions
@@ -27,7 +27,9 @@ def move_elements_to_right(ppt, config=None):
             new_height = original_height * scale_factor
 
             # new positions
-            new_left = ppt.slide_width * config.sidebar_width + (original_left - original_width / 2) * scale_factor + new_width / 2
+            new_left = (
+                ppt.slide_width * config.sidebar_width + (original_left - original_width / 2) * scale_factor + new_width / 2
+            )
             vertical_center_offset = (original_height - new_height) / 2
             new_top = original_top + vertical_center_offset
 
@@ -50,7 +52,7 @@ def merge_tags(tags: list[str]) -> list[str]:
 def set_sidebar_timeline(ppt, tags: list[str], config=None):
     """create sidebar timeline on all slides with the given tags"""
     config = config or Configurations()
-    
+
     assert len(tags) == len(ppt.slides), f"The number of tags: {len(tags)} has to match the number of slides: {len(ppt.slides)}"
 
     merged_tags = merge_tags(tags)
