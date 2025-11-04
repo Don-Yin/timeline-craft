@@ -1,11 +1,25 @@
 .DS_Store
-
-out
-
 Icon
 
 __pycache__
-Icon
+*.pyc
+*.pyo
+*.pyd
+
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+out
 
 .vscode
 .cursor/
+
+.pytest_cache/
+.tox/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/

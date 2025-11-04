@@ -8,44 +8,39 @@ from timeline.utils.paragraph import add_paragraph, amend_font
 
 
 from pptx.dml.color import RGBColor
-from webcolors import name_to_rgb, hex_to_rgb
+from webcolors import hex_to_rgb
 
 
 def move_elements_to_right(ppt, sidebar_width=0.12):
-    """
-    Moves all placeholders and images to the right of the screen, shrinking them while maintaining their
-    original aspect ratio, and ensuring their vertical centers remain in the same position.
-    """
+    """moves all placeholders and images to the right of the screen, shrinking them while maintaining their original aspect ratio, and ensuring their vertical centers remain in the same position"""
     for slide in ppt.slides:
         for shape in slide.shapes:
-            # Original dimensions and positions
+            # original dimensions and positions
             original_top = shape.top
             original_left = shape.left
             original_height = shape.height
             original_width = shape.width
 
-            # Calculate scale factor for width
+            # calculate scale factor for width
             content_space_width = ppt.slide_width * (1 - sidebar_width)
             scale_factor = content_space_width / ppt.slide_width
 
-            # New dimensions
+            # new dimensions
             new_width = original_width * scale_factor
             new_height = original_height * scale_factor
 
-            # New positions
+            # new positions
             new_left = ppt.slide_width * sidebar_width + (original_left - original_width / 2) * scale_factor + new_width / 2
             vertical_center_offset = (original_height - new_height) / 2
             new_top = original_top + vertical_center_offset
 
-            # Apply new dimensions and positions
+            # apply new dimensions and positions
             shape.left, shape.width = int(new_left), int(new_width)
             shape.top, shape.height = int(new_top), int(new_height)
 
 
 def merge_tags(tags: list[str]) -> list[str]:
-    """
-    Merge the adjacent slides with the same tag
-    """
+    """merge the adjacent slides with the same tag"""
     merged_tags = []
     for i, tag in enumerate(tags):
         if i == 0:
@@ -71,7 +66,6 @@ def set_sidebar_timeline(
 ):
     assert len(tags) == len(ppt.slides), f"The number of tags: {len(tags)} has to match the number of slides: {len(ppt.slides)}"
 
-    # merge the adjacent slides with the same tag
     merged_tags = merge_tags(tags)
 
     # adding the base shapes to each slide

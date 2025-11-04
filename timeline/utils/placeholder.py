@@ -1,4 +1,5 @@
-from pptx.util import Inches
+from pptx.util import Inches, Pt
+from pptx.oxml.xmlchemy import OxmlElement
 import collections
 import collections.abc
 from pptx.shapes import shapetree
@@ -6,7 +7,7 @@ from pptx.shapes import shapetree
 
 class _BaseShapes(shapetree._BaseShapes):
     def clone_placeholder(self, placeholder, input_idx=None):
-        """Add a new placeholder shape based on *placeholder*."""
+        """add a new placeholder shape based on *placeholder*."""
         sp = placeholder.element
         ph_type, orient, sz, idx = (sp.ph_type, sp.ph_orient, sp.ph_sz, sp.ph_idx)
         if input_idx is not None:
@@ -23,9 +24,7 @@ shapetree._BaseShapes.clone_placeholder = _BaseShapes.clone_placeholder
 
 
 def collect_placeholder_templates(presentation):
-    """
-    Collect all available placeholder templates in the master layouts
-    """
+    """collect all available placeholder templates in the master layouts"""
     templates = {}
     for layout in presentation.slide_layouts:
         for placeholder in layout.placeholders:
@@ -71,8 +70,6 @@ def add_placeholder(ppt, slide_index: int, template: str, left, top, width, heig
     placeholder.width = Inches(ppt.slide_width.inches * width)
     placeholder.height = Inches(ppt.slide_height.inches * height)
 
-    from pptx.util import Pt
-
     text_frame = placeholder.text_frame
     text_frame.margin_left = Pt(7.2)
     text_frame.margin_right = Pt(3.6)
@@ -90,8 +87,6 @@ def add_placeholder(ppt, slide_index: int, template: str, left, top, width, heig
             tag = child.tag.lower()
             if any(x in tag for x in ["bu", "mar", "indent", "spc", "lvl", "defppr", "tablst"]):
                 pPr.remove(child)
-
-        from pptx.oxml.xmlchemy import OxmlElement
 
         buNone = OxmlElement("a:buNone")
         pPr.insert(0, buNone)

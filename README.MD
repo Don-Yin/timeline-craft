@@ -8,7 +8,7 @@ This project is about adding a timeline (with smooth transitions) in Microsoft P
 ## Preview Compare
 |      Before Processing       |      After Processing      |
 | :--------------------------: | :------------------------: |
-| ![Before](public/before.png) | ![After](public/after.png) |
+| ![before](public/before.png) | ![after](public/after.png) |
 
 
 ## Use

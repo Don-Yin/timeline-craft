@@ -1,10 +1,9 @@
 from pptx.oxml.xmlchemy import OxmlElement
-from pptx.util import Pt
+from pptx.util import Pt, Inches
 
 
 def add_text_box(slide, ppt, left, top, width, height):
     """create a clean text box without any template inheritance"""
-    from pptx.util import Inches
     text_box = slide.shapes.add_textbox(
         left=int(ppt.slide_width * left),
         top=int(ppt.slide_height * top),
@@ -47,9 +46,7 @@ def send_backwards(slide, element):
 
 
 def SubElement(parent, tagname, **kwargs):
-    """
-    Create a new element and append it to the parent element.
-    """
+    """create a new element and append it to the parent element"""
     element = OxmlElement(tagname)
     element.attrib.update(kwargs)
     parent.append(element)
@@ -57,7 +54,7 @@ def SubElement(parent, tagname, **kwargs):
 
 
 def set_shape_transparency(shape, alpha):
-    """Set the transparency (alpha) of a shape"""
+    """set the transparency (alpha) of a shape"""
     ts = shape.fill._xPr.solidFill
     sF = ts.get_or_change_to_srgbClr()
     sE = SubElement(sF, "a:alpha", val=str(alpha))
