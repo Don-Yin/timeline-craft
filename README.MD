@@ -2,7 +2,7 @@
 this project is about adding a timeline (with smooth transitions) in microsoft powerpoint slides.
 
 # todo
-- [ ] make all config separate
+- [x] make all config separate
 - [ ] do the auto transition
 - [ ] wbs and pack in saas
 
@@ -20,17 +20,23 @@ this project is about adding a timeline (with smooth transitions) in microsoft p
 ```python
 from pathlib import Path
 from pptx import Presentation
-from timeline import set_sidebar_timeline, move_elements_to_right
+from timeline import set_sidebar_timeline, move_elements_to_right, Configurations
 
 
 if __name__ == "__main__":
     path_ppt = Path("~/example.pptx")
-    tags = ["Intro"] * 33
+    tags = ["intro"] * 15 + ["methods"] * 10 + ["results"] * 8
 
     example_ppt = Presentation(path_ppt)
 
-    move_elements_to_right(example_ppt, sidebar_width=0.12)
-    set_sidebar_timeline(ppt=example_ppt, tags=tags, sidebar_item_height=0.10)
+    config = Configurations(
+        sidebar_width=0.12,
+        sidebar_item_height=0.10,
+        sidebar_init_font_size=18,
+    )
+
+    move_elements_to_right(example_ppt, config=config)
+    set_sidebar_timeline(ppt=example_ppt, tags=tags, config=config)
 
     example_ppt.save(path_ppt.parent / "timeline.pptx")
 ```
