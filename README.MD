@@ -1,17 +1,21 @@
+# timeline for powerpoint
+this project is about adding a timeline (with smooth transitions) in microsoft powerpoint slides.
 
-# Timeline for PowerPoint
-This project is about adding a timeline (with smooth transitions) in Microsoft PowerPoint slides.
+# todo
+- [ ] make all config separate
+- [ ] do the auto transition
+- [ ] wbs and pack in saas
 
-## Demo
-![demo](https://github.com/Don-Yin/powerpoint-timeline/blob/cf5610f7db48a2f3e2fb747e2f197c5dbedd45e8/public/demo.gif)
+# demo
+![demo](https://github.com/don-yin/powerpoint-timeline/blob/cf5610f7db48a2f3e2fb747e2f197c5dbedd45e8/public/demo.gif)
 
-## Preview Compare
-|      Before Processing       |      After Processing      |
+# preview compare
+|      before processing       |      after processing      |
 | :--------------------------: | :------------------------: |
 | ![before](public/before.png) | ![after](public/after.png) |
 
 
-## Use
+# use
 
 ```python
 from pathlib import Path
