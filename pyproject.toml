@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "timeline-craft"
+version = "0.0.3"
+description = "A Python library for creating timeline visualizations in PowerPoint"
+readme = "README.MD"
+requires-python = ">=3.12"
+authors = [
+    {name = "Don Yin", email = "don_yin@outlook.com"}
+]
+dependencies = [
+    "python-pptx",
+    "webcolors"
+]
+
+[project.urls]
+Homepage = "https://github.com/Don-Yin/timeline-craft"
+
+[tool.setuptools]
+packages = ["timeline", "timeline.utils"]
+include-package-data = true
+

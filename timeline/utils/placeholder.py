@@ -71,4 +71,35 @@ def add_placeholder(ppt, slide_index: int, template: str, left, top, width, heig
     placeholder.width = Inches(ppt.slide_width.inches * width)
     placeholder.height = Inches(ppt.slide_height.inches * height)
 
+    from pptx.util import Pt
+
+    text_frame = placeholder.text_frame
+    text_frame.margin_left = Pt(7.2)
+    text_frame.margin_right = Pt(3.6)
+    text_frame.margin_top = Pt(3.6)
+    text_frame.margin_bottom = Pt(3.6)
+
+    txBody = text_frame._element
+    for child in list(txBody):
+        if "lstStyle" in child.tag:
+            txBody.remove(child)
+
+    for paragraph in text_frame.paragraphs:
+        pPr = paragraph._element.get_or_add_pPr()
+        for child in list(pPr):
+            tag = child.tag.lower()
+            if any(x in tag for x in ["bu", "mar", "indent", "spc", "lvl", "defppr", "tablst"]):
+                pPr.remove(child)
+
+        from pptx.oxml.xmlchemy import OxmlElement
+
+        buNone = OxmlElement("a:buNone")
+        pPr.insert(0, buNone)
+
+        pPr.set("marL", "0")
+        pPr.set("marR", "0")
+        pPr.set("indent", "0")
+        pPr.set("lvl", "0")
+        pPr.set("algn", "l")
+
     return placeholder

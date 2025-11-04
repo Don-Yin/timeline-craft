@@ -1,9 +1,9 @@
 from pathlib import Path
 from pptx.enum.text import MSO_AUTO_SIZE, MSO_ANCHOR, PP_PARAGRAPH_ALIGNMENT
-from pptx.oxml.xmlchemy import OxmlElement
 
 
 def amend_font(placeholder, font_family, font_size, bold):
+    """make text bold and larger"""
     try:
         text_frame = placeholder.text_frame
         text_frame.fit_text(font_family=font_family, bold=bold, italic=False, max_size=font_size)
@@ -18,23 +18,12 @@ def add_paragraph(
     font_family,
     font_color,
 ):
-    """
-    Add text to a placeholder; iteratively reduce the size until fits
-    """
-
+    """add text to a text box; iteratively reduce the size until fits"""
     text_frame = placeholder.text_frame
-    text_frame.word_wrap = True
     text_frame.auto_size = MSO_AUTO_SIZE.SHAPE_TO_FIT_TEXT
     text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
 
     paragraph = text_frame.paragraphs[0]
-    # Clear existing paragraphs
-    # while len(text_frame.paragraphs) > 0:
-    #     text_frame._element.remove(text_frame.paragraphs[0]._element)
-
-    # # Add a new paragraph
-    # paragraph = text_frame.add_paragraph()
-
     paragraph.font.name = font_family
     paragraph.text = text
     paragraph.level = 0
@@ -42,16 +31,6 @@ def add_paragraph(
     paragraph.space_before = 0
     paragraph.space_after = 0
     paragraph.alignment = PP_PARAGRAPH_ALIGNMENT.LEFT
-
-    # Explicitly remove bullet formatting by modifying XML
-    pPr = paragraph._element.get_or_add_pPr()
-    # Remove any existing bullet elements first
-    for child in list(pPr):
-        if "bu" in child.tag:
-            pPr.remove(child)
-    # Add buNone element to disable bullets
-    buNone = OxmlElement("a:buNone")
-    pPr.insert(0, buNone)
 
     try:
         text_frame.fit_text(font_family=font_family, bold=False, italic=False, max_size=font_size)

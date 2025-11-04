@@ -3,8 +3,7 @@ import collections.abc
 from pptx.enum.shapes import MSO_SHAPE
 
 
-from timeline.utils.shapes import set_shape_transparency, send_backwards
-from timeline.utils.placeholder import add_placeholder
+from timeline.utils.shapes import set_shape_transparency, send_backwards, add_text_box
 from timeline.utils.paragraph import add_paragraph, amend_font
 
 
@@ -85,12 +84,11 @@ def set_sidebar_timeline(
         sidebar.line.color.rgb = sidebar_color_outline
         set_shape_transparency(sidebar, sidebar_transparency)
 
-        offset = 0  # sidebar item offset from top
+        offset = 0
         for tag in merged_tags:
-            placeholder = add_placeholder(
+            text_box = add_text_box(
+                slide=slide,
                 ppt=ppt,
-                slide_index=ppt.slides.index(slide),
-                template="FOOTER",
                 left=0,
                 top=offset,
                 width=sidebar_width,
@@ -98,18 +96,18 @@ def set_sidebar_timeline(
             )
 
             add_paragraph(
-                placeholder=placeholder,
+                placeholder=text_box,
                 text=tag,
                 font_size=sidebar_init_font_size,
                 font_family=sidebar_item_font,
                 font_color=sidebar_item_font_color,
             )
 
-            setattr(placeholder, "name", f"!!SIDEBAR_{merged_tags.index(tag)}")
+            setattr(text_box, "name", f"!!SIDEBAR_{merged_tags.index(tag)}")
 
             if tags[ppt.slides.index(slide)] == tag:
                 amend_font(
-                    placeholder=placeholder,
+                    placeholder=text_box,
                     font_family=sidebar_item_font,
                     font_size=sidebar_init_font_size + 3,
                     bold=True,
