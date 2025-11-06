@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## frontend (next.js ui)
 
-## Getting Started
+next.js app for timelinecraft. provides landing, operations, and settings pages with a shadcn‑style sidebar for app pages.
 
-First, run the development server:
+### features
+- minimal landing at `/landing` with demo preview and cta
+- operations at `/operate`
+  - step tabs: 1) set tags, 2) choose params, 3) preview
+  - draggable tags list with stable ids
+  - sliders for sidebar width and item height; morph toggle; file input
+  - preview section (36 dummy slides as placeholders)
+- settings at `/settings` with theme toggle (defaults to dark, persisted)
+- sidebar appears on app pages via `app/(app)/layout.tsx`
 
+### tech
+- next.js 16 (app router), react 19
+- tailwind css v4
+- shadcn‑style sidebar (`components/ui/sidebar.tsx`, `components/app-sidebar.tsx`) – see docs: https://ui.shadcn.com/docs/components/sidebar
+
+### scripts
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev     # start local dev server
+npm run build   # production build
+npm start       # start production build
+npm run lint    # run linter
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### development
+- entry pages:
+  - `/landing`  – marketing/demo (no sidebar)
+  - `/operate`  – main workflow (with sidebar)
+  - `/settings` – theme preferences (with sidebar)
+- utilities:
+  - `lib/utils.ts` – `cn()` class merge helper
+  - `lib/indexes.ts` – `IndexItem` type, ID creation, reorder helper
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### docker (optional)
+from repo root you can use compose targets. example (if configured):
+```bash
+docker-compose up -d
+docker-compose logs -f frontend
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

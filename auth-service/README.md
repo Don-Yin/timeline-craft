@@ -8,11 +8,11 @@ layer: 0 (identity & access). issues and validates jwt, manages sessions and rol
 - session storage and revocation
 
 ## interface
-| direction | data            | protocol  | peer         |
-| --------- | --------------- | --------- | ------------ |
-| input     | credentials     | http/json | api-gateway  |
-| output    | jwt/session     | http/json | api-gateway  |
-| output    | token validate  | http/json | all services |
+| direction | data           | protocol  | peer         |
+| --------- | -------------- | --------- | ------------ |
+| input     | credentials    | http/json | api-gateway  |
+| output    | jwt/session    | http/json | api-gateway  |
+| output    | token validate | http/json | all services |
 
 ## wbs
 ```mermaid
