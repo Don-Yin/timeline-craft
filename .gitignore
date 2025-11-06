@@ -24,3 +24,8 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 autorun.sh
+
+# frontend
+node_modules/
+.next/
+.turbo/
