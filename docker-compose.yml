@@ -1,0 +1,13 @@
+# docker-compose down --rmi all --volumes --remove-orphans && docker-compose up -d --build
+
+services:
+  "swagger-ui":
+    image: swaggerapi/swagger-ui:latest
+    container_name: swagger-ui-container
+    hostname: swagger-ui
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      - URLS=[]
+      - SWAGGER_JSON_URL=http://localhost:8080/openapi.json

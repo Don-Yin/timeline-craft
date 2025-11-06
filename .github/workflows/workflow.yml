@@ -14,7 +14,7 @@ jobs:
   build:
     # -------- https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
     name: Build distribution 📦
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       # -------- https://github.com/actions/checkout
@@ -29,6 +29,7 @@ jobs:
 
       # --------
       - name: Install dependencies
+        working-directory: package
         run: |
           python -m pip install --upgrade pip
           pip install black pytest
@@ -55,6 +56,7 @@ jobs:
           python -m pip install build --user
 
       - name: Build a binary wheel and a source tarball
+        working-directory: package
         run: |
           pip install --upgrade wheel
           python -m build
@@ -63,20 +65,21 @@ jobs:
         run: pip install twine
         
       - name: Check the distribution with twine
+        working-directory: package
         run: twine check dist/*
 
       - name: Store the distribution packages
         uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
-          path: dist/
+          path: package/dist/
 
   # -------- pypi --------
   publish-to-pypi:
     name: Publish Python 🐍 distribution 📦 to PyPI
     needs:
     - build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     environment:
       name: pypi
       url: https://pypi.org/p/timeline-craft
