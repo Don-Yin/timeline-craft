@@ -1,5 +1,6 @@
 ## todo
-[todo-list](TODO.MD) • [api-standards](docs/apis/README.MD)
+[todo-list](TODO.MD)
+[api-standards](docs/apis/README.MD)
 
 ## running
 ```bash
@@ -61,33 +62,34 @@ cdn:         # edge delivery for preview assets
 graph TB
   subgraph "Layer 0: UI & Access"
     FE[Frontend<br/>Next.js]
+    API[API Gateway<br/>FastAPI/BFF]
     AUTH[Auth<br/>JWT/OAuth]
     BILL[Billing<br/>Stripe]
     SESS[Session Manager<br/>redis]
-    FE -.login/signup.-> AUTH
+    FE -->|http/websocket| API
+    API -->|auth flow| AUTH
     AUTH -->|tokens| SESS
-    FE -.billing.-> BILL
+    API -->|billing| BILL
   end
 
-  subgraph "Layer 1: API & Orchestration"
-    API[API Gateway<br/>FastAPI/BFF]
+  subgraph "Layer 1: Orchestration & Uploads"
     UP[Upload Service<br/>signed URLs]
     JOBS[Orchestrator<br/>queue/scheduler]
-    FE -->|http| API
     API -->|signed url| UP
     API -->|enqueue| JOBS
   end
 
-  subgraph "Layer 2: Storage"
+  subgraph "Infra: Storage & Cache"
     OBJ[(Object Storage<br/>S3/MinIO)]
     DB[(PostgreSQL)]
     CACHE[(Redis)]
     UP -->|put| OBJ
     API <--> DB
     API <--> CACHE
+    JOBS <--> DB
   end
 
-  subgraph "Layer 3: Processing"
+  subgraph "Layer 2: Processing"
     WRK[Worker<br/>PPTX timeline]
     PREV[Preview Service<br/>png/gif]
     JOBS --> WRK
