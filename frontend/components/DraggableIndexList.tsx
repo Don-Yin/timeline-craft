@@ -1,6 +1,28 @@
 'use client';
-import { useState } from "react";
-import { createIndexItem, type IndexItem, reorderArray } from "@/lib/indexes";
+import React, { useState } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  DragStartEvent,
+  DragEndEvent,
+  defaultDropAnimationSideEffects,
+  DropAnimation,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, X } from "lucide-react";
+import { createIndexItem, type IndexItem } from "@/lib/indexes";
 
 export type DraggableIndexListProps = {
   items: IndexItem[];
@@ -8,59 +30,120 @@ export type DraggableIndexListProps = {
   title?: string;
 };
 
+function SortableItem({
+  item,
+  index,
+  onRemove,
+}: {
+  item: IndexItem;
+  index: number;
+  onRemove?: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1 : "auto",
+  };
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center justify-between rounded-md border bg-background px-3 py-2 text-sm transition-colors group"
+    >
+      <div className="flex items-center gap-3">
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded bg-secondary text-xs text-secondary-foreground select-none">
+          {index + 1}
+        </span>
+        <span className="text-zinc-800 dark:text-zinc-200 select-none">
+          {item.label}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        {onRemove && (
+          <button
+            onClick={() => onRemove(item.id)}
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md text-zinc-400 hover:text-red-500"
+            title="Remove tag"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+        <span
+          {...attributes}
+          {...listeners}
+          className="cursor-grab touch-none text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 focus:outline-none"
+          title="Drag to reorder"
+        >
+          <GripVertical className="h-4 w-4" />
+        </span>
+      </div>
+    </li>
+  );
+}
+
+function ItemOverlay({ item, index }: { item: IndexItem; index: number }) {
+  return (
+    <div className="flex items-center justify-between rounded-md border bg-background px-3 py-2 text-sm shadow-xl ring-1 ring-zinc-900/10 dark:ring-white/10">
+      <div className="flex items-center gap-3">
+        <span className="inline-flex h-6 w-6 items-center justify-center rounded bg-secondary text-xs text-secondary-foreground select-none">
+          {index + 1}
+        </span>
+        <span className="text-zinc-800 dark:text-zinc-200 select-none">
+          {item.label}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="cursor-grabbing text-zinc-500 dark:text-zinc-400">
+          <GripVertical className="h-4 w-4" />
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function DraggableIndexList({
   items,
   onChange,
   title = "tags",
 }: DraggableIndexListProps) {
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [overIndex, setOverIndex] = useState<number | null>(null);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [dragStartIndex, setDragStartIndex] = useState<number | null>(null);
-  const [dragCurrentIndex, setDragCurrentIndex] = useState<number | null>(null);
-  const [draftItems, setDraftItems] = useState<IndexItem[] | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [newItem, setNewItem] = useState<string>("");
 
-  function handleDragStart(e: React.DragEvent<HTMLLIElement>, index: number) {
-    setDraggingIndex(index);
-    setIsDragging(true);
-    setDragStartIndex(index);
-    setDragCurrentIndex(index);
-    setDraftItems(items.slice());
-    e.dataTransfer.setData("text/plain", String(index));
-    e.dataTransfer.effectAllowed = "move";
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as string);
   }
 
-  function handleDragOver(e: React.DragEvent<HTMLLIElement>, index: number) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setOverIndex(index);
-    if (!isDragging || dragCurrentIndex === null || !draftItems) return;
-    if (index === dragCurrentIndex) return;
-    const next = reorderArray(draftItems, dragCurrentIndex, index);
-    setDraftItems(next);
-    setDragCurrentIndex(index);
-  }
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
 
-  function handleDrop(e: React.DragEvent<HTMLLIElement>, targetIndex: number) {
-    e.preventDefault();
-    if (draftItems) {
-      onChange(draftItems);
+    if (over && active.id !== over.id) {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+      onChange(arrayMove(items, oldIndex, newIndex));
     }
-    resetDrag();
+    setActiveId(null);
   }
 
-  function handleDragEnd() {
-    resetDrag();
-  }
-
-  function resetDrag() {
-    setDraggingIndex(null);
-    setOverIndex(null);
-    setIsDragging(false);
-    setDragStartIndex(null);
-    setDragCurrentIndex(null);
-    setDraftItems(null);
+  function handleDragCancel() {
+    setActiveId(null);
   }
 
   function addItem() {
@@ -70,6 +153,10 @@ export default function DraggableIndexList({
     setNewItem("");
   }
 
+  function handleRemove(id: string) {
+    onChange(items.filter((item) => item.id !== id));
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -77,7 +164,18 @@ export default function DraggableIndexList({
     }
   }
 
-  const list = isDragging && draftItems ? draftItems : items;
+  const activeItem = items.find((i) => i.id === activeId);
+  const activeIndex = activeItem ? items.indexOf(activeItem) : -1;
+
+  const dropAnimation: DropAnimation = {
+    sideEffects: defaultDropAnimationSideEffects({
+      styles: {
+        active: {
+          opacity: "0.4",
+        },
+      },
+    }),
+  };
 
   return (
     <div className="flex flex-col gap-3">
@@ -91,7 +189,7 @@ export default function DraggableIndexList({
           value={newItem}
           onChange={(e) => setNewItem(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="flex-1 rounded-md border px-3 py-2 text-sm"
+          className="flex-1 rounded-md border px-3 py-2 text-sm bg-background text-foreground"
         />
         <button
           onClick={addItem}
@@ -100,46 +198,36 @@ export default function DraggableIndexList({
           add
         </button>
       </div>
-      <ul className="flex flex-col gap-2">
-        {list.map((item: IndexItem, i: number) => {
-          const isDragging = draggingIndex === i;
-          const isOver = overIndex === i;
-          return (
-            <li
-              key={item.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, i)}
-              onDragOver={(e) => handleDragOver(e, i)}
-              onDrop={(e) => handleDrop(e, i)}
-              onDragEnd={handleDragEnd}
-              className={[
-                "flex items-center justify-between rounded-md border px-3 py-2 text-sm transition-colors",
-                isDragging ? "opacity-60" : "",
-                isOver ? "ring-2 ring-offset-1 ring-ring" : "",
-              ].join(" ")}
-            >
-              <div className="flex items-center gap-3">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded bg-secondary text-xs text-secondary-foreground">
-                  {i + 1}
-                </span>
-                <span className="text-zinc-800 dark:text-zinc-200">{item.label}</span>
-              </div>
-              <span
-                aria-hidden
-                className="cursor-grab select-none text-zinc-500 dark:text-zinc-400"
-                title="Drag to reorder"
-              >
-                ≡
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <SortableContext items={items} strategy={verticalListSortingStrategy}>
+          <ul className="flex flex-col gap-2">
+            {items.map((item, i) => (
+              <SortableItem
+                key={item.id}
+                item={item}
+                index={i}
+                onRemove={handleRemove}
+              />
+            ))}
+          </ul>
+        </SortableContext>
+        <DragOverlay dropAnimation={dropAnimation}>
+          {activeId && activeItem ? (
+            <ItemOverlay item={activeItem} index={activeIndex} />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+
       <p className="text-xs text-zinc-500">
         drag items to reorder. this updates the in‑memory order only.
       </p>
     </div>
   );
 }
-
-

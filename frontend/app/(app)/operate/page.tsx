@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import DraggableIndexList from "@/components/DraggableIndexList";
 import { createIndexItem, type IndexItem } from "@/lib/indexes";
 import { generateDummySlides } from "@/lib/slides";
@@ -7,6 +7,7 @@ import { StepTabs, type Step } from "@/components/StepTabs";
 import { ParametersForm } from "@/components/ParametersForm";
 import { SlidePreviewList } from "@/components/SlidePreviewList";
 import ResizableColumns from "@/components/ResizableColumns";
+import { TagSlideManager } from "@/components/TagSlideManager";
 
 export default function Operate() {
   const [file, setFile] = useState<File | null>(null);
@@ -21,22 +22,66 @@ export default function Operate() {
   );
   const dummySlides = generateDummySlides(36);
   const [slideTagMap, setSlideTagMap] = useState<Record<number, string | null>>(
-    () =>
-      Object.fromEntries(dummySlides.map((n) => [n, null])) as Record<
-        number,
-        string | null
-      >
+    {}
   );
   const [activeTab, setActiveTab] = useState<"tags" | "params" | "preview">("tags");
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Helper to evenly distribute slides among tags
+  function distributeSlides(tags: IndexItem[]) {
+    if (tags.length === 0) {
+        setSlideTagMap(Object.fromEntries(dummySlides.map(s => [s, null])));
+        return;
+    }
+    const map: Record<number, string | null> = {};
+    const chunkSize = Math.ceil(dummySlides.length / tags.length);
+    dummySlides.forEach((slide, index) => {
+        const tagIndex = Math.floor(index / chunkSize);
+        const tag = tags[Math.min(tagIndex, tags.length - 1)];
+        map[slide] = tag.id;
+    });
+    setSlideTagMap(map);
+  }
+
+  // Initial distribution and whenever tags change (number or ids)
+  // Note: We might want to preserve manual overrides, but requirement says "by default evenly assigned"
+  // when tags are created. For simplicity, we re-distribute when the *count* of tags changes or if we have no map yet.
+  useEffect(() => {
+     const currentTaggedCount = Object.values(slideTagMap).filter(Boolean).length;
+     // If we haven't initialized or tag count changed significantly (naive check)
+     // A better check: if we added/removed a tag.
+     // For now, let's re-distribute whenever the list of tags changes in length,
+     // effectively resetting the distribution.
+     // If the user just renames a tag, we shouldn't re-distribute.
+     // If the user reorders tags, we probably shouldn't re-distribute unless we want to follow order?
+     // Let's assume "evenly assigned" based on current order.
+     distributeSlides(indexes);
+  }, [indexes.length]); 
+  // ^ Only re-distribute if number of tags changes. Renaming shouldn't trigger it.
+
+  function handleTagsChange(newIndexes: IndexItem[]) {
+    setIndexes(newIndexes);
+    // If length is different, useEffect will handle it.
+    // If just reordered, we might want to re-distribute to match new order?
+    // "Default evenly assigned" implies the first tag gets the first chunk.
+    // If I move "Intro" to the end, should "Intro" now get the last chunk?
+    // Yes, probably.
+    if (newIndexes.length === indexes.length) {
+        // Check if order changed
+        const orderChanged = newIndexes.some((item, i) => item.id !== indexes[i].id);
+        if (orderChanged) {
+             distributeSlides(newIndexes);
+        }
+    }
+  }
 
   function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const selected = event.target.files?.[0] ?? null;
     setFile(selected);
   }
 
-  function onSlideTagChange(slideNum: number, tagId: string) {
-    setSlideTagMap((prev) => ({ ...prev, [slideNum]: tagId || null }));
+  function onSlideTagChange(slideNum: number, tagId: string | null) {
+    setSlideTagMap((prev) => ({ ...prev, [slideNum]: tagId }));
   }
 
   const tagsComplete = indexes.length > 0;
@@ -66,7 +111,7 @@ export default function Operate() {
             left={
               <div>
                 {activeTab === "tags" && (
-                  <DraggableIndexList title="arrange tags" items={indexes} onChange={setIndexes} />
+                  <DraggableIndexList title="arrange tags" items={indexes} onChange={handleTagsChange} />
                 )}
                 {activeTab === "params" && (
                   <ParametersForm
@@ -109,15 +154,24 @@ export default function Operate() {
               </div>
             }
             right={
-              <SlidePreviewList
-                slides={dummySlides}
-                mode={activeTab === "tags" ? "associate" : "view"}
-                tags={indexes}
-                slideTagMap={slideTagMap}
-                onSlideTagChange={onSlideTagChange}
-                scrollRef={previewScrollRef}
-                showTagBadge={true}
-              />
+                activeTab === "tags" ? (
+                    <TagSlideManager
+                        slides={dummySlides}
+                        tags={indexes}
+                        slideTagMap={slideTagMap}
+                        onSlideMove={onSlideTagChange}
+                    />
+                ) : (
+                  <SlidePreviewList
+                    slides={dummySlides}
+                    mode="view"
+                    tags={indexes}
+                    slideTagMap={slideTagMap}
+                    // onSlideTagChange not needed in view mode usually
+                    scrollRef={previewScrollRef}
+                    showTagBadge={true}
+                  />
+                )
             }
           />
         </section>
@@ -128,5 +182,3 @@ export default function Operate() {
     </div>
   );
 }
-
-
