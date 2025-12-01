@@ -1,6 +1,6 @@
 'use client';
 import { usePathname } from "next/navigation";
-import { Home, Settings, Workflow } from "lucide-react";
+import { Home, Settings, Workflow, FileText } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +19,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const items = [
     { title: "landing", url: "/landing", icon: Home },
+    { title: "manage", url: "/manage", icon: FileText },
     { title: "operate", url: "/operate", icon: Workflow },
     { title: "settings", url: "/settings", icon: Settings },
   ];

@@ -16,16 +16,9 @@ export default function Landing() {
                        hover:border-zinc-300/80 hover:shadow-md dark:border-white/10 dark:bg-black/30 dark:hover:border-white/20"
           >
             <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-transparent to-black/[.02] dark:to-white/[.03]" />
-            <div className="overflow-hidden rounded-xl border border-zinc-200/70 dark:border-white/10">
-              <img
-                src="https://github.com/don-yin/powerpoint-timeline/raw/cf5610f7db48a2f3e2fb747e2f197c5dbedd45e8/public/demo.gif"
-                alt="TimelineCraft demo"
-                className="h-auto w-full"
-              />
-            </div>
-            <div className="mt-6 flex justify-center">
+            <div className="flex justify-center">
               <Link
-                href="/operate"
+                href="/manage"
                 className="rounded-full bg-foreground px-6 py-3 text-background shadow-sm transition hover:opacity-95"
               >
                 get started →
