@@ -55,7 +55,9 @@ async def check_metadata(file_id: str):
         # minio python client returns metadata keys in lower case usually
         filename = stat.metadata.get("x-amz-meta-filename", file_id)
 
-        return FileMetadata(id=file_id, filename=filename, size=stat.size, content_type=stat.content_type, last_modified=stat.last_modified)
+        return FileMetadata(
+            id=file_id, filename=filename, size=stat.size, content_type=stat.content_type, last_modified=stat.last_modified
+        )
     except Exception as e:
         # return empty/error object or handle better in prod
         raise HTTPException(status_code=404, detail="file not found")

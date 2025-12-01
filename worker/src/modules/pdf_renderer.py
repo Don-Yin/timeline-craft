@@ -11,7 +11,16 @@ def convert_pptx_to_pdf_bytes(file_id: str, pptx_bytes: bytes) -> bytes:
         tmpdir_path = Path(tmpdir)
         pptx_path = tmpdir_path / "source.pptx"
         pptx_path.write_bytes(pptx_bytes)
-        cmd = ["soffice", "--headless", f"-env:UserInstallation=file://{str(tmpdir_path)}/profile", "--convert-to", "pdf", "--outdir", str(tmpdir_path), str(pptx_path)]
+        cmd = [
+            "soffice",
+            "--headless",
+            f"-env:UserInstallation=file://{str(tmpdir_path)}/profile",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            str(tmpdir_path),
+            str(pptx_path),
+        ]
         try:
             subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         except subprocess.CalledProcessError as exc:

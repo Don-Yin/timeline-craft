@@ -7,7 +7,13 @@ from pptx import Presentation
 
 from .schemas import ThumbnailResponse, ProcessRequest, ProcessResponse, ListProcessedResponse, SlideCountResponse
 from ..modules.cache import PdfCache
-from ..modules.storage import get_file_from_minio, upload_file_to_minio, list_files_in_bucket, MINIO_BUCKET_UPLOADS, MINIO_BUCKET_PROCESSED
+from ..modules.storage import (
+    get_file_from_minio,
+    upload_file_to_minio,
+    list_files_in_bucket,
+    MINIO_BUCKET_UPLOADS,
+    MINIO_BUCKET_PROCESSED,
+)
 from ..modules.pdf_renderer import convert_pptx_to_pdf_bytes, render_slide_thumbnail
 from ..modules.pptx_processor import process_presentation
 
@@ -75,7 +81,12 @@ async def process_file(file_id: str, request: ProcessRequest):
         processed_buffer = process_presentation(file_data, request)
 
         # 3. Upload to processed bucket
-        upload_file_to_minio(MINIO_BUCKET_PROCESSED, file_id, processed_buffer, "application/vnd.openxmlformats-officedocument.presentationml.presentation")
+        upload_file_to_minio(
+            MINIO_BUCKET_PROCESSED,
+            file_id,
+            processed_buffer,
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        )
 
         return ProcessResponse(file_id=file_id, processed_file_id=file_id, message="File processed and saved successfully")
 
