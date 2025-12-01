@@ -1,6 +1,37 @@
 # docker-compose down --rmi all --volumes --remove-orphans && docker-compose up -d --build
 
 services:
+  "worker-service":
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    container_name: worker-service-container
+    hostname: worker-service
+    ports:
+      - "8002:8002"
+    restart: unless-stopped
+    environment:
+      - MINIO_ENDPOINT=file-store:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET_UPLOADS=uploads
+      - MINIO_BUCKET_PROCESSED=processed
+    depends_on:
+      - file-store
+
+  "frontend":
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend-container
+    hostname: frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_UPLOAD_SERVICE_URL=http://localhost:8001
+      - NEXT_PUBLIC_WORKER_SERVICE_URL=http://localhost:8002
+    restart: unless-stopped
+
   "swagger-ui":
     image: swaggerapi/swagger-ui:latest
     container_name: swagger-ui-container
@@ -9,5 +40,40 @@ services:
       - "8080:8080"
     restart: unless-stopped
     environment:
-      - URLS=[]
-      - SWAGGER_JSON_URL=http://localhost:8080/openapi.json
+      URLS: >-
+        [
+          { url: 'http://localhost:8001/openapi.json', name: 'Upload Service' },
+          { url: 'http://localhost:8002/openapi.json', name: 'Worker Service' }
+        ]
+
+  "file-store":
+    image: minio/minio:latest
+    container_name: file-store-container
+    hostname: file-store
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - ./upload-service/store:/data
+
+  "upload-service":
+    build:
+      context: ./upload-service
+      dockerfile: Dockerfile
+    container_name: upload-service-container
+    hostname: upload-service
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+    environment:
+      - MINIO_ENDPOINT=file-store:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET_NAME=uploads
+    depends_on:
+      - file-store

@@ -1,5 +1,6 @@
 'use client';
 import { type IndexItem } from "@/lib/indexes";
+import { type Slide } from "@/lib/slides";
 import { useRef } from "react";
 
 export function SlidePreviewList({
@@ -11,7 +12,7 @@ export function SlidePreviewList({
   scrollRef,
   showTagBadge = true,
 }: {
-  slides: number[];
+  slides: Slide[];
   mode?: "view" | "associate";
   tags?: IndexItem[];
   slideTagMap?: Record<number, string | null>;
@@ -32,20 +33,20 @@ export function SlidePreviewList({
     <div className="rounded-lg border p-3">
       <div ref={setRef} className="max-h-[70vh] overflow-y-auto">
         <div className="flex flex-col gap-4">
-          {slides.map((n) => (
-            <div key={n} className="flex items-start gap-3">
+          {slides.map((s) => (
+            <div key={s.id} className="flex items-start gap-3">
               <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded bg-secondary text-xs text-secondary-foreground">
-                {n}
+                {s.id}
               </span>
               <div className="relative w-full">
                 <img
-                  src={`https://picsum.photos/seed/slide-${n}/640/360`}
-                  alt={`Slide ${n}`}
+                  src={s.src}
+                  alt={`Slide ${s.id}`}
                   className="h-auto w-full rounded-md border"
                 />
                 {showTagBadge && tags && slideTagMap && (
                   <span className="absolute right-2 top-2 rounded bg-black/70 px-2 py-1 text-xs text-white dark:bg-white/20 dark:text-white">
-                    {tags.find((t) => t.id === (slideTagMap[n] ?? ""))?.label ?? "no tag"}
+                    {tags.find((t) => t.id === (slideTagMap[s.id] ?? ""))?.label ?? "no tag"}
                   </span>
                 )}
               </div>

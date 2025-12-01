@@ -1,8 +1,6 @@
 'use client';
 
 export function ParametersForm({
-  file,
-  onFileChange,
   sidebarWidth,
   onSidebarWidthChange,
   itemHeight,
@@ -12,8 +10,6 @@ export function ParametersForm({
   applyMorph,
   onApplyMorphChange,
 }: {
-  file: File | null;
-  onFileChange: (file: File | null) => void;
   sidebarWidth: number;
   onSidebarWidthChange: (value: number) => void;
   itemHeight: number;
@@ -25,20 +21,9 @@ export function ParametersForm({
 }) {
   return (
     <section className="rounded-xl border p-5">
-      <h2 className="mb-3 text-base font-medium">upload pptx & parameters</h2>
-      <input
-        type="file"
-        accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation"
-        onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
-        className="block w-full rounded-md border px-4 py-2 text-sm"
-      />
-      {file && (
-        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-          selected: <span className="font-medium">{file.name}</span>
-        </p>
-      )}
+      <h2 className="mb-3 text-base font-medium">configure parameters</h2>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
+      <div className="grid grid-cols-2 gap-4 text-sm">
         <label className="flex flex-col gap-1">
           <span className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
             <span>sidebar width (%)</span>

@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+minio
+python-multipart
+Pillow
+PyMuPDF
+

@@ -20,7 +20,7 @@ export function AppSidebar() {
   const items = [
     { title: "landing", url: "/landing", icon: Home },
     { title: "manage", url: "/manage", icon: FileText },
-    { title: "operate", url: "/operate", icon: Workflow },
+    // { title: "operate", url: "/operate", icon: Workflow }, // operate is now dynamic, accessed via manage
     { title: "settings", url: "/settings", icon: Settings },
   ];
 

@@ -29,3 +29,7 @@ autorun.sh
 node_modules/
 .next/
 .turbo/
+
+# local storage
+upload-service/store/
+minio_data/

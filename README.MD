@@ -14,21 +14,21 @@ docker-compose up -d --build
 
 ### production architecture
 
-| service               | layer | description                                          |
-| --------------------- | ----- | ---------------------------------------------------- |
-| [frontend](frontend/) | 0     | Next.js UI for uploading PPTX and managing timelines |
-| api-gateway           | 0     | FastAPI BFF: routing, auth, signed uploads           |
-| auth-service          | 0     | Authentication/authorization (JWT/OAuth)             |
-| billing-service       | 0     | Subscriptions & payments (Stripe)                    |
-| orchestrator          | 1     | Job coordination & scheduling (queue)                |
-| upload-service        | 1     | Signed URLs, antivirus, file intake                  |
-| worker                | 2     | PPTX processing (timeline generation)                |
-| preview-service       | 2     | Thumbnails/GIF rendering for UI previews             |
-| webhook-service       | 0     | Stripe/webhook ingestion (billing, job status)       |
-| storage               | infra | Object storage (S3/MinIO)                            |
-| db                    | infra | PostgreSQL: users, timelines, jobs                   |
-| cache                 | infra | Redis: sessions, cache, job queue                    |
-| cdn                   | infra | CDN for preview assets                               |
+| service               | layer | port | description                                    |
+| --------------------- | ----- | ---- | ---------------------------------------------- |
+| [frontend](frontend/) | 0     | 3000 | frontend                                       |
+| api-gateway           | 0     |      | FastAPI BFF: routing, auth, signed uploads     |
+| auth-service          | 0     |      | Authentication/authorization (JWT/OAuth)       |
+| billing-service       | 0     |      | Subscriptions & payments (Stripe)              |
+| orchestrator          | 1     |      | Job coordination & scheduling (queue)          |
+| upload-service        | 1     | 8001 | Signed URLs, antivirus, file intake            |
+| worker                | 2     | 8002 | PPTX processing (timeline generation)          |
+| preview-service       | 2     |      | Thumbnails/GIF rendering for UI previews       |
+| webhook-service       | 0     |      | Stripe/webhook ingestion (billing, job status) |
+| storage               | infra | 9000 | Object storage (S3/MinIO)                      |
+| db                    | infra |      | PostgreSQL: users, timelines, jobs             |
+| cache                 | infra |      | Redis: sessions, cache, job queue              |
+| cdn                   | infra | N/A  | CDN for preview assets                         |
 
 ```yaml
 services:
