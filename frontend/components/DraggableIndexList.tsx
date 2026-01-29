@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -21,7 +21,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, X } from "lucide-react";
+import { GripVertical, X, Plus } from "lucide-react";
 import { createIndexItem, type IndexItem } from "@/lib/indexes";
 
 export type DraggableIndexListProps = {
@@ -29,6 +29,96 @@ export type DraggableIndexListProps = {
   onChange: (next: IndexItem[]) => void;
   title?: string;
 };
+
+function InsertZone({
+  insertAt,
+  onInsert,
+  isDragging,
+}: {
+  insertAt: number;
+  onInsert: (index: number, label: string) => void;
+  isDragging: boolean;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isEditing]);
+
+  function handleSubmit() {
+    const trimmed = value.trim();
+    if (trimmed) {
+      onInsert(insertAt, trimmed);
+      setValue("");
+    }
+    setIsEditing(false);
+    setIsHovered(false);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+    }
+    if (e.key === "Escape") {
+      setValue("");
+      setIsEditing(false);
+      setIsHovered(false);
+    }
+  }
+
+  function handleBlur() {
+    if (!value.trim()) {
+      setIsEditing(false);
+      setIsHovered(false);
+    }
+  }
+
+  if (isDragging) {
+    return <div className="h-1" />;
+  }
+
+  return (
+    <div
+      className="relative group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => !isEditing && setIsHovered(false)}
+    >
+      <div
+        className={`
+          transition-all duration-200 overflow-hidden
+          ${isEditing ? "h-10 opacity-100" : isHovered ? "h-8 opacity-100" : "h-2 opacity-0 hover:opacity-100"}
+        `}
+      >
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            type="text"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
+            placeholder="type tag name, press Enter"
+            className="w-full h-10 px-3 text-sm rounded-md border border-dashed border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        ) : (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="w-full h-full flex items-center justify-center gap-2 rounded-md border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors text-zinc-400 hover:text-emerald-600"
+          >
+            <Plus className="h-3 w-3" />
+            <span className="text-xs">add tag here</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function SortableItem({
   item,
@@ -118,7 +208,6 @@ export default function DraggableIndexList({
   title = "tags",
 }: DraggableIndexListProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [newItem, setNewItem] = useState<string>("");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -146,26 +235,19 @@ export default function DraggableIndexList({
     setActiveId(null);
   }
 
-  function addItem() {
-    const value = newItem.trim();
-    if (!value) return;
-    onChange([...items, createIndexItem(value)]);
-    setNewItem("");
+  function handleInsert(index: number, label: string) {
+    const newItems = [...items];
+    newItems.splice(index, 0, createIndexItem(label));
+    onChange(newItems);
   }
 
   function handleRemove(id: string) {
     onChange(items.filter((item) => item.id !== id));
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addItem();
-    }
-  }
-
   const activeItem = items.find((i) => i.id === activeId);
   const activeIndex = activeItem ? items.indexOf(activeItem) : -1;
+  const isDragging = activeId !== null;
 
   const dropAnimation: DropAnimation = {
     sideEffects: defaultDropAnimationSideEffects({
@@ -178,25 +260,10 @@ export default function DraggableIndexList({
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between mb-2">
         <h3 className="text-base font-medium">{title}</h3>
-      </div>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="add tag (e.g., intro)"
-          value={newItem}
-          onChange={(e) => setNewItem(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="flex-1 rounded-md border px-3 py-2 text-sm bg-background text-foreground"
-        />
-        <button
-          onClick={addItem}
-          className="rounded-md bg-foreground px-3 py-2 text-sm text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]"
-        >
-          add
-        </button>
+        <span className="text-xs text-zinc-500">{items.length} tags</span>
       </div>
 
       <DndContext
@@ -207,14 +274,13 @@ export default function DraggableIndexList({
         onDragCancel={handleDragCancel}
       >
         <SortableContext items={items} strategy={verticalListSortingStrategy}>
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col">
+            <InsertZone insertAt={0} onInsert={handleInsert} isDragging={isDragging} />
             {items.map((item, i) => (
-              <SortableItem
-                key={item.id}
-                item={item}
-                index={i}
-                onRemove={handleRemove}
-              />
+              <React.Fragment key={item.id}>
+                <SortableItem item={item} index={i} onRemove={handleRemove} />
+                <InsertZone insertAt={i + 1} onInsert={handleInsert} isDragging={isDragging} />
+              </React.Fragment>
             ))}
           </ul>
         </SortableContext>
@@ -225,8 +291,8 @@ export default function DraggableIndexList({
         </DragOverlay>
       </DndContext>
 
-      <p className="text-xs text-zinc-500">
-        drag items to reorder. this updates the in‑memory order only.
+      <p className="text-xs text-zinc-500 mt-2">
+        hover between items to add new tags. drag to reorder.
       </p>
     </div>
   );

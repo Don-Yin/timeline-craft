@@ -16,6 +16,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Build-time environment variables for Next.js
+ARG NEXT_PUBLIC_UPLOAD_SERVICE_URL
+ARG NEXT_PUBLIC_WORKER_SERVICE_URL
+ENV NEXT_PUBLIC_UPLOAD_SERVICE_URL=$NEXT_PUBLIC_UPLOAD_SERVICE_URL
+ENV NEXT_PUBLIC_WORKER_SERVICE_URL=$NEXT_PUBLIC_WORKER_SERVICE_URL
+
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.

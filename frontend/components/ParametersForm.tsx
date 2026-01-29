@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 export function ParametersForm({
   sidebarWidth,
   onSidebarWidthChange,
@@ -9,6 +11,11 @@ export function ParametersForm({
   onDurationChange,
   applyMorph,
   onApplyMorphChange,
+  onDownload,
+  isDownloading,
+  canDownload,
+  progress,
+  progressMessage,
 }: {
   sidebarWidth: number;
   onSidebarWidthChange: (value: number) => void;
@@ -18,12 +25,19 @@ export function ParametersForm({
   onDurationChange: (value: number) => void;
   applyMorph: boolean;
   onApplyMorphChange: (value: boolean) => void;
+  onDownload: () => void;
+  isDownloading: boolean;
+  canDownload: boolean;
+  progress: number;
+  progressMessage: string;
 }) {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   return (
     <section className="rounded-xl border p-5">
       <h2 className="mb-3 text-base font-medium">configure parameters</h2>
 
-      <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="flex flex-col gap-4 text-sm">
         <label className="flex flex-col gap-1">
           <span className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
             <span>sidebar width (%)</span>
@@ -54,18 +68,6 @@ export function ParametersForm({
             className="w-full"
           />
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-zinc-700 dark:text-zinc-300">transition duration (s)</span>
-          <input
-            type="number"
-            min={0}
-            max={2}
-            step={0.1}
-            value={duration}
-            onChange={(e) => onDurationChange(Number(e.target.value))}
-            className="rounded-md border px-3 py-2"
-          />
-        </label>
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -76,18 +78,47 @@ export function ParametersForm({
         </label>
       </div>
 
+      <details className="mt-4" open={showAdvanced} onToggle={(e) => setShowAdvanced((e.target as HTMLDetailsElement).open)}>
+        <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
+          advanced settings
+        </summary>
+        <div className="mt-3 flex flex-col gap-3 text-sm">
+          <label className="flex flex-col gap-1">
+            <span className="text-zinc-700 dark:text-zinc-300">transition duration (s)</span>
+            <input
+              type="number"
+              min={0}
+              max={2}
+              step={0.1}
+              value={duration}
+              onChange={(e) => onDurationChange(Number(e.target.value))}
+              className="rounded-md border px-3 py-2"
+            />
+          </label>
+        </div>
+      </details>
+
       <button
-        className="mt-6 w-full rounded-full bg-foreground px-5 py-3 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] disabled:opacity-60"
-        disabled
-        title="Processing pipeline not connected yet"
+        className="mt-6 w-full rounded-full bg-emerald-600 text-white transition-all hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden"
+        onClick={onDownload}
+        disabled={!canDownload || isDownloading}
+        style={{ height: '48px' }}
       >
-        process (coming soon)
+        {isDownloading ? (
+          <div className="relative w-full h-full">
+            <div
+              className="absolute inset-0 bg-emerald-500 transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-sm font-medium">{progress}%</span>
+              <span className="text-xs opacity-80 truncate max-w-[90%]">{progressMessage}</span>
+            </div>
+          </div>
+        ) : (
+          <span className="relative z-10">download .pptx</span>
+        )}
       </button>
-      <p className="mt-2 text-xs text-zinc-500">
-        the processing pipeline (api gateway, upload, worker) is not wired yet in this environment.
-      </p>
     </section>
   );
 }
-
-

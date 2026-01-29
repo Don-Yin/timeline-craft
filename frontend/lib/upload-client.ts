@@ -95,8 +95,84 @@ export async function getThumbnail(fileId: string, slideIndex: number): Promise<
     return data.image_base64;
 }
 
-export async function processFile(fileId: string, params: any): Promise<void> {
-    const res = await fetch(`${WORKER_SERVICE_URL}/process-file/${fileId}`, {
+export type ProcessParams = {
+    tags: string[];
+    sidebar_width: number;
+    sidebar_item_height: number;
+    transition_duration: number;
+    apply_morph_transition: boolean;
+};
+
+export type ProgressEvent = {
+    stage: string;
+    progress: number;
+    message: string;
+    job_id?: string;
+};
+
+export async function processWithProgress(
+    fileId: string,
+    params: ProcessParams,
+    onProgress: (event: ProgressEvent) => void
+): Promise<void> {
+    const res = await fetch(`${WORKER_SERVICE_URL}/process-with-progress/${fileId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+    });
+
+    if (!res.ok) {
+        throw new Error('Failed to start processing');
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) {
+        throw new Error('No response body');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let jobId: string | null = null;
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+            if (line.startsWith('data: ')) {
+                const data = JSON.parse(line.slice(6)) as ProgressEvent;
+                onProgress(data);
+                if (data.job_id) {
+                    jobId = data.job_id;
+                }
+            }
+        }
+    }
+
+    if (jobId) {
+        const downloadRes = await fetch(`${WORKER_SERVICE_URL}/download-processed/${jobId}`);
+        if (!downloadRes.ok) {
+            throw new Error('Failed to download processed file');
+        }
+
+        const blob = await downloadRes.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `timeline-${fileId}.pptx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+}
+
+export async function processAndDownload(fileId: string, params: ProcessParams): Promise<void> {
+    const res = await fetch(`${WORKER_SERVICE_URL}/process-and-download/${fileId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -107,4 +183,14 @@ export async function processFile(fileId: string, params: any): Promise<void> {
     if (!res.ok) {
         throw new Error('Failed to process file');
     }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `timeline-${fileId}.pptx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }

@@ -8,7 +8,7 @@ import { ParametersForm } from "@/components/ParametersForm";
 import { SlidePreviewList } from "@/components/SlidePreviewList";
 import ResizableColumns from "@/components/ResizableColumns";
 import { TagSlideManager } from "@/components/TagSlideManager";
-import { getThumbnail, processFile, getSlideCount } from "@/lib/upload-client";
+import { getThumbnail, processWithProgress, getSlideCount, type ProgressEvent } from "@/lib/upload-client";
 
 export default function Operate({ params }: { params: Promise<{ id: string }> }) {
   // Unwrap params using React.use()
@@ -77,7 +77,10 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
   const [slideTagMap, setSlideTagMap] = useState<Record<number, string | null>>(
     {}
   );
-  const [activeTab, setActiveTab] = useState<"tags" | "params" | "preview">("tags");
+  const [activeTab, setActiveTab] = useState<"tags" | "params">("tags");
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState("");
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Helper to evenly distribute slides among tags
@@ -141,18 +144,46 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
   }
 
   const tagsComplete = indexes.length > 0;
-  const paramsComplete =
-    sidebarWidth !== 12 ||
-    itemHeight !== 10 ||
-    duration !== 0.3 ||
-    applyMorph !== true;
-  const previewComplete = tagsComplete && paramsComplete;
+  const paramsComplete = true;
 
   const steps: Step[] = [
     { id: "tags", label: "1. set tags", completed: tagsComplete },
     { id: "params", label: "2. choose params", completed: paramsComplete },
-    { id: "preview", label: "3. preview", completed: previewComplete },
   ];
+
+  function buildTagsArray(): string[] {
+    return Array.from({ length: slideCount }, (_, idx) => {
+      const slideNum = idx + 1;
+      const tagId = slideTagMap[slideNum];
+      const tag = indexes.find((t) => t.id === tagId);
+      return tag?.label ?? "untitled";
+    });
+  }
+
+  async function handleDownload() {
+    setIsDownloading(true);
+    setProgress(0);
+    setProgressMessage("starting...");
+
+    await processWithProgress(
+      id,
+      {
+        tags: buildTagsArray(),
+        sidebar_width: sidebarWidth / 100,
+        sidebar_item_height: itemHeight / 100,
+        transition_duration: duration,
+        apply_morph_transition: applyMorph,
+      },
+      (event: ProgressEvent) => {
+        setProgress(event.progress);
+        setProgressMessage(event.message);
+      }
+    );
+
+    setIsDownloading(false);
+    setProgress(0);
+    setProgressMessage("");
+  }
 
   return (
     <div className="flex min-h-screen w-full bg-zinc-50 font-sans dark:bg-black">
@@ -178,31 +209,12 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
                     onDurationChange={setDuration}
                     applyMorph={applyMorph}
                     onApplyMorphChange={setApplyMorph}
+                    onDownload={handleDownload}
+                    isDownloading={isDownloading}
+                    canDownload={tagsComplete && slideCount > 0}
+                    progress={progress}
+                    progressMessage={progressMessage}
                   />
-                )}
-                {activeTab === "preview" && (
-                  <div className="rounded-lg border p-4">
-                    <h3 className="mb-3 text-sm font-medium">export</h3>
-                    <div className="flex flex-wrap gap-3">
-                      <button
-                        className="rounded-md bg-foreground px-4 py-2 text-sm text-background transition-colors hover:opacity-95 disabled:opacity-60"
-                        disabled
-                        title="export not wired yet"
-                      >
-                        download powerpoint (.pptx)
-                      </button>
-                      <button
-                        className="rounded-md border px-4 py-2 text-sm hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-60"
-                        disabled
-                        title="export not wired yet"
-                      >
-                        download pdf
-                      </button>
-                    </div>
-                    <p className="mt-2 text-xs text-zinc-500">
-                      exports are not available in this environment yet.
-                    </p>
-                  </div>
                 )}
               </div>
             }

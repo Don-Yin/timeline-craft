@@ -116,7 +116,8 @@ export default function Manage() {
         {files.map((file) => (
           <div
             key={file.id}
-            className="group relative flex aspect-[3/4] flex-col justify-between rounded-xl border bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+            onClick={() => window.location.href = `/operate/${file.id}`}
+            className="group relative flex aspect-[3/4] cursor-pointer flex-col justify-between rounded-xl border bg-white p-4 shadow-sm transition-all hover:shadow-md hover:ring-2 hover:ring-emerald-500/50 dark:border-zinc-800 dark:bg-zinc-900"
           >
             <div className="flex flex-1 flex-col items-center justify-center gap-3">
               <div className="rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
@@ -132,23 +133,16 @@ export default function Manage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-1 pt-2 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="flex items-center justify-center gap-1 pt-2 opacity-0 transition-opacity group-hover:opacity-100">
               <button
-                onClick={() => window.location.href = `/operate/${file.id}`}
-                className="rounded-md p-1.5 text-zinc-500 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
-                title="Process"
-              >
-                <FileText className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => downloadFile(file)}
+                onClick={(e) => { e.stopPropagation(); downloadFile(file); }}
                 className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                 title="Download"
               >
                 <Download className="h-4 w-4" />
               </button>
               <button
-                onClick={() => removeFile(file.id)}
+                onClick={(e) => { e.stopPropagation(); removeFile(file.id); }}
                 className="rounded-md p-1.5 text-zinc-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                 title="Remove"
               >
