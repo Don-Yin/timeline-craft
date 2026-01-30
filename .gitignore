@@ -33,3 +33,6 @@ node_modules/
 # local storage
 upload-service/store/
 minio_data/
+
+# demo videos (large files)
+frontend/public/demo/demo.mov
