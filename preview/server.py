@@ -63,7 +63,16 @@ def convert_pptx_to_png_first_slide(pptx_bytes: bytes, job_id: str) -> bytes:
         pptx_path = tmpdir_path / "source.pptx"
         pptx_path.write_bytes(pptx_bytes)
 
-        cmd = ["soffice", "--headless", f"-env:UserInstallation=file://{tmpdir_path}/profile", "--convert-to", "png", "--outdir", str(tmpdir_path), str(pptx_path)]
+        cmd = [
+            "soffice",
+            "--headless",
+            f"-env:UserInstallation=file://{tmpdir_path}/profile",
+            "--convert-to",
+            "png",
+            "--outdir",
+            str(tmpdir_path),
+            str(pptx_path),
+        ]
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
         logger.info(f"direct png export completed for {job_id}")
 
@@ -77,7 +86,16 @@ def convert_pptx_to_pdf(pptx_bytes: bytes, job_id: str) -> bytes:
         pptx_path = tmpdir_path / "source.pptx"
         pptx_path.write_bytes(pptx_bytes)
 
-        cmd = ["soffice", "--headless", f"-env:UserInstallation=file://{tmpdir_path}/profile", "--convert-to", "pdf", "--outdir", str(tmpdir_path), str(pptx_path)]
+        cmd = [
+            "soffice",
+            "--headless",
+            f"-env:UserInstallation=file://{tmpdir_path}/profile",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            str(tmpdir_path),
+            str(pptx_path),
+        ]
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=180)
         logger.info(f"pdf conversion completed for {job_id}")
 
@@ -148,7 +166,11 @@ async def render_first_slide_sse(file_id: str, request: PreviewRequest):
 
         yield f"data: {json.dumps({'stage': 'done', 'progress': 100, 'message': f'completed in {total_time:.1f}s', 'thumbnails': [thumbnail], 'format': 'png'})}\n\n"
 
-    return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"})
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+    )
 
 
 @app.post("/render-previews-with-sidebar/{file_id}")
@@ -209,7 +231,11 @@ async def render_previews_with_sidebar_sse(file_id: str, request: PreviewRequest
         total_time = convert_time + (time.time() - start_render)
         yield f"data: {json.dumps({'stage': 'done', 'progress': 100, 'message': f'completed in {total_time:.1f}s', 'thumbnails': thumbnails, 'format': 'jpeg'})}\n\n"
 
-    return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"})
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+    )
 
 
 if __name__ == "__main__":

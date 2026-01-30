@@ -1,4 +1,5 @@
 """upload service api endpoints"""
+
 import os
 import uuid
 
@@ -51,7 +52,9 @@ async def check_metadata(file_id: str):
     """retrieve metadata for a specific file including filename, size, and content type"""
     stat = minio_client.stat_object(MINIO_BUCKET_NAME, file_id)
     filename = stat.metadata.get("x-amz-meta-filename", file_id)
-    return FileMetadata(id=file_id, filename=filename, size=stat.size, content_type=stat.content_type, last_modified=stat.last_modified)
+    return FileMetadata(
+        id=file_id, filename=filename, size=stat.size, content_type=stat.content_type, last_modified=stat.last_modified
+    )
 
 
 @router.delete("/delete/{file_id}", response_model=DeleteResponse, summary="Delete a file")

@@ -9,7 +9,7 @@ app = FastAPI(
     openapi_tags=[
         {"name": "files", "description": "File upload, listing, and management operations"},
         {"name": "health", "description": "Service health checks"},
-    ]
+    ],
 )
 
 app.add_middleware(

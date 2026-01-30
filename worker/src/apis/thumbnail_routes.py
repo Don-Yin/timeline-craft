@@ -1,4 +1,5 @@
 """thumbnail generation endpoints"""
+
 import io
 import logging
 import time
@@ -97,4 +98,3 @@ async def pre_generate_pdf(file_id: str):
     elapsed = time.time() - start_time
     logger.info(f"pre-generated pdf for {file_id} in {elapsed:.1f}s")
     return {"status": "generated", "file_id": file_id, "time_seconds": round(elapsed, 1)}
-
