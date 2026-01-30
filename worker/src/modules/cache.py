@@ -1,4 +1,5 @@
 """in-memory cache with ttl for pdf bytes"""
+
 import time
 import logging
 from threading import Lock
@@ -38,3 +39,16 @@ class PdfCache:
                 first_key = next(iter(self._entries))
                 del self._entries[first_key]
             self._entries[key] = (now, data)
+
+    def delete(self, key: str):
+        """delete a cached entry by key"""
+        with self._lock:
+            if key in self._entries:
+                del self._entries[key]
+
+    def delete_prefix(self, prefix: str):
+        """delete cached entries whose keys start with a prefix"""
+        with self._lock:
+            keys = [k for k in self._entries.keys() if k.startswith(prefix)]
+            for k in keys:
+                del self._entries[k]

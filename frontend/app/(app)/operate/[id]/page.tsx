@@ -8,7 +8,7 @@ import { ParametersForm } from "@/components/ParametersForm";
 import { PreviewWithProgress } from "@/components/PreviewWithProgress";
 import ResizableColumns from "@/components/ResizableColumns";
 import { TagSlideManager } from "@/components/TagSlideManager";
-import { getAllThumbnails, processWithProgress, type ProgressEvent } from "@/lib/upload-client";
+import { getAllThumbnails, processWithProgress, type ProgressEvent } from "@/lib/api";
 
 export default function Operate({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -20,6 +20,9 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
   const [itemHeight, setItemHeight] = useState<number>(10);
   const [duration, setDuration] = useState<number>(0.3);
   const [applyMorph, setApplyMorph] = useState<boolean>(true);
+  const [sidebarColorHex, setSidebarColorHex] = useState<string>("#5A5A5A");
+  const [indicatorColorHex, setIndicatorColorHex] = useState<string>("#111111");
+  const [sidebarFontColorHex, setSidebarFontColorHex] = useState<string>("#FFFFFF");
   const [indexes, setIndexes] = useState<IndexItem[]>(
     ["intro", "methods", "results", "discussion", "conclusion"].map((l) => createIndexItem(l))
   );
@@ -43,6 +46,14 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
       return tag?.label ?? "untitled";
     });
   }, [slideCount, slideTagMap, indexes]);
+
+  const slideCounts = useMemo((): Record<string, number> => {
+    const counts: Record<string, number> = {};
+    Object.values(slideTagMap).forEach((tagId) => {
+      if (tagId) counts[tagId] = (counts[tagId] || 0) + 1;
+    });
+    return counts;
+  }, [slideTagMap]);
 
   const distributeSlides = useCallback((tags: IndexItem[]) => {
     if (slideCount === 0) {
@@ -98,6 +109,9 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
         sidebar_item_height: itemHeight / 100,
         transition_duration: duration,
         apply_morph_transition: applyMorph,
+        sidebar_color_hex: sidebarColorHex,
+        indicator_color_hex: indicatorColorHex,
+        sidebar_item_font_color_hex: sidebarFontColorHex,
       },
       (event: ProgressEvent) => {
         setProgress(event.progress);
@@ -128,7 +142,7 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
             left={
               <div>
                 {activeTab === "tags" && (
-                  <DraggableIndexList title="arrange tags" items={indexes} onChange={handleTagsChange} />
+                  <DraggableIndexList title="arrange tags" items={indexes} onChange={handleTagsChange} slideCounts={slideCounts} />
                 )}
                 {activeTab === "params" && (
                   <ParametersForm
@@ -140,6 +154,12 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
                     onDurationChange={setDuration}
                     applyMorph={applyMorph}
                     onApplyMorphChange={setApplyMorph}
+                    sidebarColorHex={sidebarColorHex}
+                    onSidebarColorHexChange={setSidebarColorHex}
+                    indicatorColorHex={indicatorColorHex}
+                    onIndicatorColorHexChange={setIndicatorColorHex}
+                    sidebarFontColorHex={sidebarFontColorHex}
+                    onSidebarFontColorHexChange={setSidebarFontColorHex}
                     onDownload={handleDownload}
                     isDownloading={isDownloading}
                     canDownload={tagsComplete && slideCount > 0}
@@ -169,6 +189,9 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
                   slideTagMap={slideTagMap}
                   sidebarWidth={sidebarWidth}
                   itemHeight={itemHeight}
+                  sidebarColorHex={sidebarColorHex}
+                  indicatorColorHex={indicatorColorHex}
+                  sidebarFontColorHex={sidebarFontColorHex}
                   scrollRef={previewScrollRef}
                 />
               )

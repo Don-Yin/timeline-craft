@@ -1,6 +1,8 @@
 import io
 from pptx import Presentation
+from pptx.dml.color import RGBColor
 from timeline import set_sidebar_timeline, move_elements_to_right, set_morph_transitions, Configurations
+from webcolors import hex_to_rgb
 from ..apis.schemas import ProcessRequest
 
 
@@ -13,6 +15,9 @@ def process_presentation(file_data: io.BytesIO, request: ProcessRequest) -> io.B
         sidebar_width=request.sidebar_width,
         sidebar_item_height=request.sidebar_item_height,
         sidebar_init_font_size=request.sidebar_init_font_size,
+        sidebar_color=RGBColor(*hex_to_rgb(request.sidebar_color_hex)),
+        indicator_color=RGBColor(*hex_to_rgb(request.indicator_color_hex)),
+        sidebar_item_font_color=RGBColor(*hex_to_rgb(request.sidebar_item_font_color_hex)),
         transition_duration=request.transition_duration,
         apply_morph_transition=request.apply_morph_transition,
     )

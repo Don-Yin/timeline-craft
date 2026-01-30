@@ -1,4 +1,5 @@
 """pdf rendering utilities using libreoffice and pymupdf"""
+
 import base64
 import logging
 import subprocess
@@ -18,10 +19,13 @@ def convert_pptx_to_pdf_bytes(file_id: str, pptx_bytes: bytes) -> bytes:
         pptx_path.write_bytes(pptx_bytes)
 
         cmd = [
-            "soffice", "--headless",
+            "soffice",
+            "--headless",
             f"-env:UserInstallation=file://{tmpdir_path}/profile",
-            "--convert-to", "pdf",
-            "--outdir", str(tmpdir_path),
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            str(tmpdir_path),
             str(pptx_path),
         ]
         subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

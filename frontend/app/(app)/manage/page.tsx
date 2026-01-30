@@ -8,7 +8,7 @@ import {
   uploadFile,
   deleteFile,
   type FileMetadata,
-} from '@/lib/upload-client';
+} from '@/lib/api';
 
 export default function Manage() {
   const [files, setFiles] = useState<FileMetadata[]>([]);

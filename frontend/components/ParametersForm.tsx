@@ -11,6 +11,12 @@ export function ParametersForm({
   onDurationChange,
   applyMorph,
   onApplyMorphChange,
+  sidebarColorHex,
+  onSidebarColorHexChange,
+  indicatorColorHex,
+  onIndicatorColorHexChange,
+  sidebarFontColorHex,
+  onSidebarFontColorHexChange,
   onDownload,
   isDownloading,
   canDownload,
@@ -25,6 +31,12 @@ export function ParametersForm({
   onDurationChange: (value: number) => void;
   applyMorph: boolean;
   onApplyMorphChange: (value: boolean) => void;
+  sidebarColorHex: string;
+  onSidebarColorHexChange: (value: string) => void;
+  indicatorColorHex: string;
+  onIndicatorColorHexChange: (value: string) => void;
+  sidebarFontColorHex: string;
+  onSidebarFontColorHexChange: (value: string) => void;
   onDownload: () => void;
   isDownloading: boolean;
   canDownload: boolean;
@@ -68,14 +80,6 @@ export function ParametersForm({
             className="w-full"
           />
         </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={applyMorph}
-            onChange={(e) => onApplyMorphChange(e.target.checked)}
-          />
-          <span className="text-zinc-700 dark:text-zinc-300">apply morph transition</span>
-        </label>
       </div>
 
       <details className="mt-4" open={showAdvanced} onToggle={(e) => setShowAdvanced((e.target as HTMLDetailsElement).open)}>
@@ -83,6 +87,35 @@ export function ParametersForm({
           advanced settings
         </summary>
         <div className="mt-3 flex flex-col gap-3 text-sm">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={applyMorph}
+              onChange={(e) => onApplyMorphChange(e.target.checked)}
+            />
+            <span className="text-zinc-700 dark:text-zinc-300">apply morph transition</span>
+          </label>
+          <label className="flex items-center justify-between gap-3">
+            <span className="text-zinc-700 dark:text-zinc-300">sidebar color</span>
+            <div className="flex items-center gap-2">
+              <input type="color" value={sidebarColorHex} onChange={(e) => onSidebarColorHexChange(e.target.value)} className="h-8 w-12 cursor-pointer rounded border-0" />
+              <span className="w-16 text-xs text-zinc-500 font-mono">{sidebarColorHex}</span>
+            </div>
+          </label>
+          <label className="flex items-center justify-between gap-3">
+            <span className="text-zinc-700 dark:text-zinc-300">pointer box color</span>
+            <div className="flex items-center gap-2">
+              <input type="color" value={indicatorColorHex} onChange={(e) => onIndicatorColorHexChange(e.target.value)} className="h-8 w-12 cursor-pointer rounded border-0" />
+              <span className="w-16 text-xs text-zinc-500 font-mono">{indicatorColorHex}</span>
+            </div>
+          </label>
+          <label className="flex items-center justify-between gap-3">
+            <span className="text-zinc-700 dark:text-zinc-300">sidebar font color</span>
+            <div className="flex items-center gap-2">
+              <input type="color" value={sidebarFontColorHex} onChange={(e) => onSidebarFontColorHexChange(e.target.value)} className="h-8 w-12 cursor-pointer rounded border-0" />
+              <span className="w-16 text-xs text-zinc-500 font-mono">{sidebarFontColorHex}</span>
+            </div>
+          </label>
           <label className="flex flex-col gap-1">
             <span className="text-zinc-700 dark:text-zinc-300">transition duration (s)</span>
             <input

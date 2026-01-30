@@ -1,9 +1,18 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { type IndexItem } from '@/lib/indexes';
 import { type Slide } from '@/lib/slides';
-import { getFirstSlidePreview, type PreviewProgressEvent, type PreviewParams } from '@/lib/upload-client';
+import { getFirstSlidePreview, type PreviewProgressEvent, type PreviewParams } from '@/lib/api';
 import { cn } from '@/lib/utils';
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 type Props = {
   fileId: string;
@@ -12,18 +21,27 @@ type Props = {
   slideTagMap: Record<number, string | null>;
   sidebarWidth: number; // percentage 0-100
   itemHeight: number;   // percentage 0-100
+  sidebarColorHex: string;
+  indicatorColorHex: string;
+  sidebarFontColorHex: string;
   scrollRef?: React.Ref<HTMLDivElement>;
   showTagBadge?: boolean;
 };
 
 export function PreviewWithProgress({
-  fileId, slides, tags, slideTagMap, sidebarWidth, itemHeight, scrollRef, showTagBadge = true,
+  fileId, slides, tags, slideTagMap, sidebarWidth, itemHeight, sidebarColorHex, indicatorColorHex, sidebarFontColorHex, scrollRef, showTagBadge = true,
 }: Props) {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState('');
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  const debouncedSidebarColor = useDebounce(sidebarColorHex, 500);
+  const debouncedIndicatorColor = useDebounce(indicatorColorHex, 500);
+  const debouncedFontColor = useDebounce(sidebarFontColorHex, 500);
+  const debouncedSidebarWidth = useDebounce(sidebarWidth, 300);
+  const debouncedItemHeight = useDebounce(itemHeight, 300);
 
   const innerRef = useRef<HTMLDivElement | null>(null);
   const setRef = (node: HTMLDivElement | null) => {
@@ -34,7 +52,7 @@ export function PreviewWithProgress({
     }
   };
 
-  const buildTagsArray = useCallback((): string[] => {
+  const tagsArray = useMemo((): string[] => {
     return Array.from({ length: slides.length }, (_, idx) => {
       const slideNum = slides[idx].id;
       const tagId = slideTagMap[slideNum];
@@ -49,7 +67,6 @@ export function PreviewWithProgress({
       return;
     }
 
-    // Abort previous request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -63,9 +80,12 @@ export function PreviewWithProgress({
       setProgressMessage('starting...');
 
       const params: PreviewParams = {
-        tags: buildTagsArray(),
-        sidebar_width: sidebarWidth / 100,
-        sidebar_item_height: itemHeight / 100,
+        tags: tagsArray,
+        sidebar_width: debouncedSidebarWidth / 100,
+        sidebar_item_height: debouncedItemHeight / 100,
+        sidebar_color_hex: debouncedSidebarColor,
+        indicator_color_hex: debouncedIndicatorColor,
+        sidebar_item_font_color_hex: debouncedFontColor,
       };
 
       const result = await getFirstSlidePreview(
@@ -90,7 +110,7 @@ export function PreviewWithProgress({
     });
 
     return () => controller.abort();
-  }, [fileId, slides.length, sidebarWidth, itemHeight, buildTagsArray]);
+  }, [fileId, slides.length, debouncedSidebarWidth, debouncedItemHeight, debouncedSidebarColor, debouncedIndicatorColor, debouncedFontColor, tagsArray]);
 
   return (
     <div className="rounded-lg border p-3">

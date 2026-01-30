@@ -28,6 +28,7 @@ export type DraggableIndexListProps = {
   items: IndexItem[];
   onChange: (next: IndexItem[]) => void;
   title?: string;
+  slideCounts?: Record<string, number>;
 };
 
 function InsertZone({
@@ -124,10 +125,12 @@ function SortableItem({
   item,
   index,
   onRemove,
+  slideCount,
 }: {
   item: IndexItem;
   index: number;
   onRemove?: (id: string) => void;
+  slideCount?: number;
 }) {
   const {
     attributes,
@@ -160,6 +163,11 @@ function SortableItem({
         </span>
       </div>
       <div className="flex items-center gap-2">
+        {slideCount !== undefined && (
+          <span className="text-xs text-zinc-400 dark:text-zinc-500 tabular-nums">
+            {slideCount} {slideCount === 1 ? "slide" : "slides"}
+          </span>
+        )}
         {onRemove && (
           <button
             onClick={() => onRemove(item.id)}
@@ -182,7 +190,7 @@ function SortableItem({
   );
 }
 
-function ItemOverlay({ item, index }: { item: IndexItem; index: number }) {
+function ItemOverlay({ item, index, slideCount }: { item: IndexItem; index: number; slideCount?: number }) {
   return (
     <div className="flex items-center justify-between rounded-md border bg-background px-3 py-2 text-sm shadow-xl ring-1 ring-zinc-900/10 dark:ring-white/10">
       <div className="flex items-center gap-3">
@@ -194,6 +202,11 @@ function ItemOverlay({ item, index }: { item: IndexItem; index: number }) {
         </span>
       </div>
       <div className="flex items-center gap-2">
+        {slideCount !== undefined && (
+          <span className="text-xs text-zinc-400 dark:text-zinc-500 tabular-nums">
+            {slideCount} {slideCount === 1 ? "slide" : "slides"}
+          </span>
+        )}
         <span className="cursor-grabbing text-zinc-500 dark:text-zinc-400">
           <GripVertical className="h-4 w-4" />
         </span>
@@ -206,6 +219,7 @@ export default function DraggableIndexList({
   items,
   onChange,
   title = "tags",
+  slideCounts = {},
 }: DraggableIndexListProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -278,7 +292,7 @@ export default function DraggableIndexList({
             <InsertZone insertAt={0} onInsert={handleInsert} isDragging={isDragging} />
             {items.map((item, i) => (
               <React.Fragment key={item.id}>
-                <SortableItem item={item} index={i} onRemove={handleRemove} />
+                <SortableItem item={item} index={i} onRemove={handleRemove} slideCount={slideCounts[item.id]} />
                 <InsertZone insertAt={i + 1} onInsert={handleInsert} isDragging={isDragging} />
               </React.Fragment>
             ))}
@@ -286,14 +300,10 @@ export default function DraggableIndexList({
         </SortableContext>
         <DragOverlay dropAnimation={dropAnimation}>
           {activeId && activeItem ? (
-            <ItemOverlay item={activeItem} index={activeIndex} />
+            <ItemOverlay item={activeItem} index={activeIndex} slideCount={slideCounts[activeItem.id]} />
           ) : null}
         </DragOverlay>
       </DndContext>
-
-      <p className="text-xs text-zinc-500 mt-3 px-1">
-        hover between items to add new tags
-      </p>
     </div>
   );
 }

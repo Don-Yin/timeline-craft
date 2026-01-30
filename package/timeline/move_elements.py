@@ -27,9 +27,7 @@ def move_elements_to_right(ppt, config=None):
             new_height = original_height * scale_factor
 
             # new positions
-            new_left = (
-                ppt.slide_width * config.sidebar_width + (original_left - original_width / 2) * scale_factor + new_width / 2
-            )
+            new_left = ppt.slide_width * config.sidebar_width + (original_left - original_width / 2) * scale_factor + new_width / 2
             vertical_center_offset = (original_height - new_height) / 2
             new_top = original_top + vertical_center_offset
 
