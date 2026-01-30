@@ -77,8 +77,10 @@ services:
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET_NAME=uploads
+      - WORKER_SERVICE_URL=http://worker-service:8002
     depends_on:
       - file-store
+      - worker-service
 
   "preview-service":
     build:

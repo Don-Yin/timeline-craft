@@ -1,8 +1,12 @@
+"""upload service api endpoints"""
 import os
 import uuid
-from fastapi import APIRouter, UploadFile, File, HTTPException
+
+import httpx
+from fastapi import APIRouter, BackgroundTasks, File, UploadFile
 from minio import Minio
-from .schemas import FileResponse, DeleteResponse, FileMetadata, ListFilesResponse
+
+from .schemas import DeleteResponse, FileMetadata, FileResponse, ListFilesResponse
 
 router = APIRouter()
 
@@ -10,6 +14,7 @@ MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
 MINIO_BUCKET_NAME = os.getenv("MINIO_BUCKET_NAME", "uploads")
+WORKER_SERVICE_URL = os.getenv("WORKER_SERVICE_URL", "http://worker-service:8002")
 
 minio_client = Minio(MINIO_ENDPOINT, access_key=MINIO_ACCESS_KEY, secret_key=MINIO_SECRET_KEY, secure=False)
 
@@ -17,12 +22,20 @@ if not minio_client.bucket_exists(MINIO_BUCKET_NAME):
     minio_client.make_bucket(MINIO_BUCKET_NAME)
 
 
+async def trigger_pdf_pregeneration(file_id: str):
+    """background task to trigger pdf pre-generation on worker service"""
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        response = await client.post(f"{WORKER_SERVICE_URL}/pre-generate-pdf/{file_id}")
+        print(f"pdf pre-generation triggered for {file_id}: {response.status_code}")
+
+
 @router.post("/upload", response_model=FileResponse, summary="Upload a PowerPoint file")
-async def upload_file(file: UploadFile = File(..., description="The .pptx file to upload")):
+async def upload_file(background_tasks: BackgroundTasks, file: UploadFile = File(..., description="The .pptx file to upload")):
     """upload a powerpoint presentation file to storage"""
     file_id = str(uuid.uuid4())
     metadata = {"filename": file.filename}
     minio_client.put_object(MINIO_BUCKET_NAME, file_id, file.file, length=-1, part_size=10 * 1024 * 1024, metadata=metadata)
+    background_tasks.add_task(trigger_pdf_pregeneration, file_id)
     return FileResponse(id=file_id, filename=file.filename, message="file uploaded successfully")
 
 

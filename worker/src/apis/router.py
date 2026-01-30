@@ -11,6 +11,8 @@ from ..modules.storage import (
     get_file_from_minio,
     upload_file_to_minio,
     list_files_in_bucket,
+    get_cached_pdf,
+    store_cached_pdf,
     MINIO_BUCKET_UPLOADS,
     MINIO_BUCKET_PROCESSED,
 )
@@ -59,20 +61,30 @@ async def get_thumbnail(file_id: str, slide_index: int):
 
 @router.get("/get-all-thumbnails/{file_id}", response_model=AllThumbnailsResponse, tags=["thumbnails"], summary="Get all thumbnails at once")
 async def get_all_thumbnails(file_id: str):
-    """generate all slide thumbnails in a single request for faster loading"""
+    """generate all slide thumbnails - uses persistent pdf cache for speed (~0.8s if cached)"""
     logger.info(f"fetching all thumbnails for file {file_id}")
+    start_time = time.time()
 
-    file_buffer = get_file_from_minio(MINIO_BUCKET_UPLOADS, file_id)
-    pptx_bytes = file_buffer.getvalue()
+    # Check persistent MinIO cache first
+    pdf_bytes = get_cached_pdf(file_id)
 
-    pdf_bytes = pdf_cache.get(file_id)
     if pdf_bytes is None:
-        logger.info(f"no cached pdf for {file_id}, converting via libreoffice")
+        # Check in-memory cache
+        pdf_bytes = pdf_cache.get(file_id)
+
+    if pdf_bytes is None:
+        # No cache - convert and store
+        logger.info(f"no cached pdf for {file_id}, converting via libreoffice (~28s)")
+        file_buffer = get_file_from_minio(MINIO_BUCKET_UPLOADS, file_id)
+        pptx_bytes = file_buffer.getvalue()
         pdf_bytes = convert_pptx_to_pdf_bytes(file_id, pptx_bytes)
+        # Store in both caches
         pdf_cache.set(file_id, pdf_bytes)
+        store_cached_pdf(file_id, pdf_bytes)
 
     thumbnails = render_all_thumbnails(pdf_bytes)
-    logger.info(f"generated {len(thumbnails)} thumbnails for {file_id}")
+    elapsed = time.time() - start_time
+    logger.info(f"generated {len(thumbnails)} thumbnails for {file_id} in {elapsed:.2f}s")
     return AllThumbnailsResponse(file_id=file_id, thumbnails=thumbnails)
 
 
@@ -82,6 +94,30 @@ async def get_slide_count(file_id: str):
     file_data = get_file_from_minio(MINIO_BUCKET_UPLOADS, file_id)
     prs = Presentation(file_data)
     return SlideCountResponse(file_id=file_id, slide_count=len(prs.slides))
+
+
+@router.post("/pre-generate-pdf/{file_id}", tags=["thumbnails"], summary="Pre-generate PDF cache")
+async def pre_generate_pdf(file_id: str):
+    """pre-convert pptx to pdf and cache in minio for instant thumbnail loading later"""
+    logger.info(f"pre-generating pdf cache for {file_id}")
+
+    # Check if already cached
+    existing = get_cached_pdf(file_id)
+    if existing:
+        logger.info(f"pdf already cached for {file_id}")
+        return {"status": "already_cached", "file_id": file_id}
+
+    start_time = time.time()
+    file_buffer = get_file_from_minio(MINIO_BUCKET_UPLOADS, file_id)
+    pptx_bytes = file_buffer.getvalue()
+
+    pdf_bytes = convert_pptx_to_pdf_bytes(file_id, pptx_bytes)
+    store_cached_pdf(file_id, pdf_bytes)
+    pdf_cache.set(file_id, pdf_bytes)
+
+    elapsed = time.time() - start_time
+    logger.info(f"pre-generated pdf for {file_id} in {elapsed:.1f}s")
+    return {"status": "generated", "file_id": file_id, "time_seconds": round(elapsed, 1)}
 
 
 @router.post("/get-preview-thumbnail/{file_id}/{slide_index}", response_model=ThumbnailResponse, tags=["thumbnails"], summary="Get preview with sidebar")
@@ -204,23 +240,17 @@ def _generate_progress_stream(file_id: str, request: ProcessRequest):
     file_data = get_file_from_minio(MINIO_BUCKET_UPLOADS, file_id)
     processor = ProgressiveProcessor(file_data, request)
 
+    gen = processor.process_with_progress()
     result_buffer = None
 
-    for progress_event in processor.process_with_progress():
-        if isinstance(progress_event, io.BytesIO):
-            result_buffer = progress_event
+    while True:
+        try:
+            progress_event = next(gen)
+            event_data = json.dumps(progress_event)
+            yield f"data: {event_data}\n\n"
+        except StopIteration as e:
+            result_buffer = e.value
             break
-
-        event_data = json.dumps(progress_event)
-        yield f"data: {event_data}\n\n"
-
-        if progress_event.get("stage") == "complete":
-            break
-
-    if result_buffer is None:
-        result_buffer = io.BytesIO()
-        processor.prs.save(result_buffer)
-        result_buffer.seek(0)
 
     job_id = str(uuid.uuid4())
     with store_lock:

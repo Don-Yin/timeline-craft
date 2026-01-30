@@ -1,9 +1,8 @@
-from pathlib import Path
 from pptx.enum.text import MSO_AUTO_SIZE, MSO_ANCHOR, PP_PARAGRAPH_ALIGNMENT
 from pptx.util import Pt
 
 
-def amend_font(placeholder, font_family, font_size, bold):
+def amend_font(placeholder, font_family: str, font_size: int, bold: bool):
     """make text bold and larger"""
     text_frame = placeholder.text_frame
     for paragraph in text_frame.paragraphs:
@@ -14,9 +13,9 @@ def amend_font(placeholder, font_family, font_size, bold):
 
 def add_paragraph(
     placeholder,
-    text: Path,
-    font_size,
-    font_family,
+    text: str,
+    font_size: int,
+    font_family: str,
     font_color,
 ):
     """add text to a text box; iteratively reduce the size until fits"""
