@@ -45,6 +45,8 @@ class PreviewRequest(BaseModel):
     sidebar_color_hex: str = Field(default="#5A5A5A", pattern=r"^#[0-9A-Fa-f]{6}$")
     indicator_color_hex: str = Field(default="#111111", pattern=r"^#[0-9A-Fa-f]{6}$")
     sidebar_item_font_color_hex: str = Field(default="#FFFFFF", pattern=r"^#[0-9A-Fa-f]{6}$")
+    sidebar_transparency: int = Field(default=50, ge=0, le=100)
+    sidebar_init_font_size: int = Field(default=18, ge=8, le=48)
 
 
 def get_file_from_minio(file_id: str) -> bytes:
@@ -148,6 +150,8 @@ async def render_first_slide_sse(file_id: str, request: PreviewRequest):
             sidebar_color=RGBColor(*hex_to_rgb(request.sidebar_color_hex)),
             indicator_color=RGBColor(*hex_to_rgb(request.indicator_color_hex)),
             sidebar_item_font_color=RGBColor(*hex_to_rgb(request.sidebar_item_font_color_hex)),
+            sidebar_transparency=request.sidebar_transparency * 1000,
+            sidebar_init_font_size=request.sidebar_init_font_size,
         )
         move_elements_to_right(prs, config=config)
         set_sidebar_timeline(ppt=prs, tags=request.tags, config=config)
@@ -195,7 +199,15 @@ async def render_previews_with_sidebar_sse(file_id: str, request: PreviewRequest
 
         yield f"data: {json.dumps({'stage': 'processing', 'progress': 10, 'message': 'moving elements...'})}\n\n"
 
-        config = Configurations(sidebar_width=request.sidebar_width, sidebar_item_height=request.sidebar_item_height)
+        config = Configurations(
+            sidebar_width=request.sidebar_width,
+            sidebar_item_height=request.sidebar_item_height,
+            sidebar_color=RGBColor(*hex_to_rgb(request.sidebar_color_hex)),
+            indicator_color=RGBColor(*hex_to_rgb(request.indicator_color_hex)),
+            sidebar_item_font_color=RGBColor(*hex_to_rgb(request.sidebar_item_font_color_hex)),
+            sidebar_transparency=request.sidebar_transparency * 1000,
+            sidebar_init_font_size=request.sidebar_init_font_size,
+        )
         move_elements_to_right(prs, config=config)
 
         yield f"data: {json.dumps({'stage': 'processing', 'progress': 20, 'message': 'adding sidebar timeline...'})}\n\n"

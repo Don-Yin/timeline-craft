@@ -17,6 +17,10 @@ export function ParametersForm({
   onIndicatorColorHexChange,
   sidebarFontColorHex,
   onSidebarFontColorHexChange,
+  sidebarTransparency,
+  onSidebarTransparencyChange,
+  fontSize,
+  onFontSizeChange,
   onDownload,
   isDownloading,
   canDownload,
@@ -37,6 +41,10 @@ export function ParametersForm({
   onIndicatorColorHexChange: (value: string) => void;
   sidebarFontColorHex: string;
   onSidebarFontColorHexChange: (value: string) => void;
+  sidebarTransparency: number;
+  onSidebarTransparencyChange: (value: number) => void;
+  fontSize: number;
+  onFontSizeChange: (value: number) => void;
   onDownload: () => void;
   isDownloading: boolean;
   canDownload: boolean;
@@ -115,6 +123,36 @@ export function ParametersForm({
               <input type="color" value={sidebarFontColorHex} onChange={(e) => onSidebarFontColorHexChange(e.target.value)} className="h-8 w-12 cursor-pointer rounded border-0" />
               <span className="w-16 text-xs text-zinc-500 font-mono">{sidebarFontColorHex}</span>
             </div>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
+              <span>sidebar transparency</span>
+              <span className="text-xs text-zinc-500">{sidebarTransparency}%</span>
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={sidebarTransparency}
+              onChange={(e) => onSidebarTransparencyChange(Number(e.target.value))}
+              className="w-full"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
+              <span>font size (pt)</span>
+              <span className="text-xs text-zinc-500">{fontSize}pt</span>
+            </span>
+            <input
+              type="range"
+              min={8}
+              max={48}
+              step={1}
+              value={fontSize}
+              onChange={(e) => onFontSizeChange(Number(e.target.value))}
+              className="w-full"
+            />
           </label>
           <label className="flex flex-col gap-1">
             <span className="text-zinc-700 dark:text-zinc-300">transition duration (s)</span>

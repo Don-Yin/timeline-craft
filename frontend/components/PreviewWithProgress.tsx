@@ -24,12 +24,14 @@ type Props = {
   sidebarColorHex: string;
   indicatorColorHex: string;
   sidebarFontColorHex: string;
+  sidebarTransparency: number; // percentage 0-100
+  fontSize: number; // points
   scrollRef?: React.Ref<HTMLDivElement>;
   showTagBadge?: boolean;
 };
 
 export function PreviewWithProgress({
-  fileId, slides, tags, slideTagMap, sidebarWidth, itemHeight, sidebarColorHex, indicatorColorHex, sidebarFontColorHex, scrollRef, showTagBadge = true,
+  fileId, slides, tags, slideTagMap, sidebarWidth, itemHeight, sidebarColorHex, indicatorColorHex, sidebarFontColorHex, sidebarTransparency, fontSize, scrollRef, showTagBadge = true,
 }: Props) {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -42,6 +44,8 @@ export function PreviewWithProgress({
   const debouncedFontColor = useDebounce(sidebarFontColorHex, 500);
   const debouncedSidebarWidth = useDebounce(sidebarWidth, 300);
   const debouncedItemHeight = useDebounce(itemHeight, 300);
+  const debouncedTransparency = useDebounce(sidebarTransparency, 300);
+  const debouncedFontSize = useDebounce(fontSize, 300);
 
   const innerRef = useRef<HTMLDivElement | null>(null);
   const setRef = (node: HTMLDivElement | null) => {
@@ -86,6 +90,8 @@ export function PreviewWithProgress({
         sidebar_color_hex: debouncedSidebarColor,
         indicator_color_hex: debouncedIndicatorColor,
         sidebar_item_font_color_hex: debouncedFontColor,
+        sidebar_transparency: debouncedTransparency,
+        sidebar_init_font_size: debouncedFontSize,
       };
 
       const result = await getFirstSlidePreview(
@@ -110,7 +116,7 @@ export function PreviewWithProgress({
     });
 
     return () => controller.abort();
-  }, [fileId, slides.length, debouncedSidebarWidth, debouncedItemHeight, debouncedSidebarColor, debouncedIndicatorColor, debouncedFontColor, tagsArray]);
+  }, [fileId, slides.length, debouncedSidebarWidth, debouncedItemHeight, debouncedSidebarColor, debouncedIndicatorColor, debouncedFontColor, debouncedTransparency, debouncedFontSize, tagsArray]);
 
   return (
     <div className="rounded-lg border p-3">
@@ -163,9 +169,6 @@ export function PreviewWithProgress({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-zinc-400 text-center">
-                showing first slide only for faster preview
-              </p>
             </div>
           );
         })()}

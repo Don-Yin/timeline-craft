@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -38,9 +38,9 @@ function DraggableSlide({ id, slide }: { id: string; slide: Slide }) {
       style={{ transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : "auto" }}
       {...attributes}
       {...listeners}
-      className="relative aspect-video cursor-grab overflow-hidden rounded-md border bg-zinc-100 dark:bg-zinc-800 transition-all hover:ring-2 hover:ring-primary/50"
+      className="relative cursor-grab rounded-md border bg-zinc-100 dark:bg-zinc-800 transition-all hover:ring-2 hover:ring-primary/50"
     >
-      <img src={slide.src} alt={`Slide ${slide.id}`} className="h-full w-full object-cover pointer-events-none" />
+      <img src={slide.src} alt={`Slide ${slide.id}`} className="block w-full h-auto pointer-events-none rounded-md" />
       <span className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded bg-black/60 text-[10px] font-medium text-white">
         {slide.id}
       </span>
@@ -54,8 +54,8 @@ function DroppableTagContainer({ id, isEmpty, isOver, children }: { id: string; 
   return (
     <div
       ref={setNodeRef}
-      className={`grid grid-cols-3 gap-2 rounded-lg border-2 border-dashed p-3 min-h-[100px] transition-all duration-200 ${
-        isOver ? "bg-emerald-50 border-emerald-500 dark:bg-emerald-950/30 dark:border-emerald-500 scale-[1.01]" : "bg-zinc-50/50 border-zinc-200 dark:bg-zinc-900/50 dark:border-zinc-700"
+      className={`grid grid-cols-3 gap-2 items-start rounded-lg border-2 border-dashed p-2 min-h-[100px] transition-all duration-200 ${
+        isOver ? "bg-emerald-50 border-emerald-500 dark:bg-emerald-950/30 dark:border-emerald-500" : "bg-zinc-50/50 border-zinc-200 dark:bg-zinc-900/50 dark:border-zinc-700"
       }`}
     >
       {children}
@@ -73,17 +73,8 @@ function TagAccordion({ tag, slidesInTag, isOver, containerId, activeId, isExpan
   isExpanded: boolean;
   onToggle: () => void;
 }) {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState<number | "auto">("auto");
-
-  useEffect(() => {
-    if (contentRef.current) {
-      setHeight(isExpanded ? contentRef.current.scrollHeight : 0);
-    }
-  }, [isExpanded, slidesInTag.length]);
-
   return (
-    <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden transition-all duration-300">
+    <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden">
       <button
         onClick={onToggle}
         className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${
@@ -105,18 +96,15 @@ function TagAccordion({ tag, slidesInTag, isOver, containerId, activeId, isExpan
         </span>
       </button>
 
-      <div
-        style={{ height: typeof height === "number" ? `${height}px` : height }}
-        className="transition-[height] duration-300 ease-out overflow-hidden"
-      >
-        <div ref={contentRef} className="p-3">
+      {isExpanded && (
+        <div className="p-2">
           <DroppableTagContainer id={containerId} isEmpty={slidesInTag.length === 0 && !activeId} isOver={isOver}>
             {slidesInTag.map((s) => (
               <DraggableSlide key={`slide-${s.id}`} id={`slide-${s.id}`} slide={s} />
             ))}
           </DroppableTagContainer>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -212,8 +200,8 @@ export function TagSlideManager({ slides, tags, slideTagMap, onSlideMove }: TagS
   const dropAnimation: DropAnimation = { sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: "0.5" } } }) };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-280px)] min-h-[400px]">
-      <div className="flex items-center justify-between mb-3 px-1">
+    <div className="flex flex-col h-full max-h-[calc(100vh-280px)] overflow-hidden">
+      <div className="flex items-center justify-between mb-3 px-1 flex-shrink-0">
         <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">arrange slides by section</h3>
         <div className="flex gap-2">
           <button onClick={() => setExpandedTags(new Set(tags.map(t => t.id)))} className="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
@@ -233,7 +221,7 @@ export function TagSlideManager({ slides, tags, slideTagMap, onSlideMove }: TagS
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex-1 overflow-y-auto pr-2 space-y-2">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-2 pb-4">
           {tags.map((tag) => {
             const slidesInTag = getSlidesForTag(tag.id);
             const containerId = `container-${tag.id}`;
@@ -255,8 +243,8 @@ export function TagSlideManager({ slides, tags, slideTagMap, onSlideMove }: TagS
 
         <DragOverlay dropAnimation={dropAnimation}>
           {activeSlideNum && activeSrc ? (
-            <div className="w-[180px] aspect-video overflow-hidden rounded-lg shadow-2xl ring-2 ring-emerald-500 bg-white dark:bg-zinc-900">
-              <img src={activeSrc} alt="" className="h-full w-full object-cover" />
+            <div className="relative w-[180px] overflow-hidden rounded-lg shadow-2xl ring-2 ring-emerald-500 bg-white dark:bg-zinc-900">
+              <img src={activeSrc} alt="" className="w-full h-auto" />
               <span className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded bg-emerald-600 text-[10px] font-bold text-white">
                 {activeSlideNum}
               </span>

@@ -84,15 +84,15 @@ export default function ResizableColumns({
                 gridTemplateColumns: `${leftPct}% 8px ${rightPct}%`,
             }}
         >
-            <div className="min-w-0">{left}</div>
+            <div className="min-w-0 overflow-hidden">{left}</div>
             <div
                 role="separator"
                 aria-orientation="vertical"
                 title="drag to resize"
                 onPointerDown={startDrag}
-                className="cursor-col-resize rounded bg-sidebar-border hover:bg-sidebar-accent"
+                className="cursor-col-resize rounded bg-sidebar-border hover:bg-sidebar-accent flex-shrink-0"
             />
-            <div className="min-w-0">{right}</div>
+            <div className="min-w-0 overflow-hidden">{right}</div>
         </div>
     );
 }

@@ -28,12 +28,13 @@ def build_preview_config(request: PreviewRequest) -> Configurations:
         sidebar_color=RGBColor(*hex_to_rgb(request.sidebar_color_hex)),
         indicator_color=RGBColor(*hex_to_rgb(request.indicator_color_hex)),
         sidebar_item_font_color=RGBColor(*hex_to_rgb(request.sidebar_item_font_color_hex)),
+        sidebar_transparency=request.sidebar_transparency * 1000,
     )
 
 
 def build_cache_key(file_id: str, request: PreviewRequest) -> str:
     """build unique cache key for preview"""
-    return f"{file_id}:{request.sidebar_width}:{request.sidebar_item_height}:{request.sidebar_color_hex}:{request.indicator_color_hex}:{request.sidebar_item_font_color_hex}:{hash(tuple(request.tags))}"
+    return f"{file_id}:{request.sidebar_width}:{request.sidebar_item_height}:{request.sidebar_color_hex}:{request.indicator_color_hex}:{request.sidebar_item_font_color_hex}:{request.sidebar_transparency}:{hash(tuple(request.tags))}"
 
 
 def generate_preview_pdf(file_id: str, prs: Presentation, request: PreviewRequest) -> bytes:

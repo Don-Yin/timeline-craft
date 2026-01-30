@@ -33,6 +33,8 @@ export type PreviewParams = {
     sidebar_color_hex?: string;
     indicator_color_hex?: string;
     sidebar_item_font_color_hex?: string;
+    sidebar_transparency?: number;
+    sidebar_init_font_size?: number;
 };
 
 export type PreviewThumbnailsResult = {
@@ -59,6 +61,8 @@ export type ProcessParams = {
     sidebar_color_hex?: string;
     indicator_color_hex?: string;
     sidebar_item_font_color_hex?: string;
+    sidebar_transparency?: number;
+    sidebar_init_font_size?: number;
 };
 
 export type ProgressEvent = {

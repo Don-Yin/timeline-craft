@@ -17,12 +17,14 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
   const [loadingThumbnails, setLoadingThumbnails] = useState(false);
   const [slideCount, setSlideCount] = useState<number>(0);
   const [sidebarWidth, setSidebarWidth] = useState<number>(12);
-  const [itemHeight, setItemHeight] = useState<number>(10);
+  const [itemHeight, setItemHeight] = useState<number>(8);
   const [duration, setDuration] = useState<number>(0.3);
   const [applyMorph, setApplyMorph] = useState<boolean>(true);
   const [sidebarColorHex, setSidebarColorHex] = useState<string>("#5A5A5A");
   const [indicatorColorHex, setIndicatorColorHex] = useState<string>("#111111");
   const [sidebarFontColorHex, setSidebarFontColorHex] = useState<string>("#FFFFFF");
+  const [sidebarTransparency, setSidebarTransparency] = useState<number>(90);
+  const [fontSize, setFontSize] = useState<number>(18);
   const [indexes, setIndexes] = useState<IndexItem[]>(
     ["intro", "methods", "results", "discussion", "conclusion"].map((l) => createIndexItem(l))
   );
@@ -112,6 +114,8 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
         sidebar_color_hex: sidebarColorHex,
         indicator_color_hex: indicatorColorHex,
         sidebar_item_font_color_hex: sidebarFontColorHex,
+        sidebar_transparency: sidebarTransparency,
+        sidebar_init_font_size: fontSize,
       },
       (event: ProgressEvent) => {
         setProgress(event.progress);
@@ -160,6 +164,10 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
                     onIndicatorColorHexChange={setIndicatorColorHex}
                     sidebarFontColorHex={sidebarFontColorHex}
                     onSidebarFontColorHexChange={setSidebarFontColorHex}
+                    sidebarTransparency={sidebarTransparency}
+                    onSidebarTransparencyChange={setSidebarTransparency}
+                    fontSize={fontSize}
+                    onFontSizeChange={setFontSize}
                     onDownload={handleDownload}
                     isDownloading={isDownloading}
                     canDownload={tagsComplete && slideCount > 0}
@@ -192,15 +200,14 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
                   sidebarColorHex={sidebarColorHex}
                   indicatorColorHex={indicatorColorHex}
                   sidebarFontColorHex={sidebarFontColorHex}
+                  sidebarTransparency={sidebarTransparency}
+                  fontSize={fontSize}
                   scrollRef={previewScrollRef}
                 />
               )
             }
           />
         </section>
-        <p className="text-xs text-zinc-500">
-          showing {slideCount || 36} {slideCount === 1 ? "slide" : "slides"} previews
-        </p>
       </main>
     </div>
   );

@@ -31,6 +31,9 @@ class ProcessRequest(BaseModel):
     sidebar_item_font_color_hex: str = Field(
         default="#FFFFFF", pattern=_HEX_COLOR, description="Sidebar font color as hex (e.g., #FFFFFF)"
     )
+    sidebar_transparency: int = Field(
+        default=50, ge=0, le=100, description="Sidebar transparency as percentage (0=opaque, 100=fully transparent)"
+    )
     transition_duration: float = Field(default=0.3, ge=0, le=5, description="Morph transition duration in seconds")
     apply_morph_transition: bool = Field(default=True, description="Whether to apply morph transitions between slides")
 
@@ -70,6 +73,9 @@ class PreviewRequest(BaseModel):
     )
     sidebar_item_font_color_hex: str = Field(
         default="#FFFFFF", pattern=_HEX_COLOR, description="Sidebar font color as hex (e.g., #FFFFFF)"
+    )
+    sidebar_transparency: int = Field(
+        default=50, ge=0, le=100, description="Sidebar transparency as percentage (0=opaque, 100=fully transparent)"
     )
 
 

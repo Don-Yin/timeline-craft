@@ -18,6 +18,7 @@ def process_presentation(file_data: io.BytesIO, request: ProcessRequest) -> io.B
         sidebar_color=RGBColor(*hex_to_rgb(request.sidebar_color_hex)),
         indicator_color=RGBColor(*hex_to_rgb(request.indicator_color_hex)),
         sidebar_item_font_color=RGBColor(*hex_to_rgb(request.sidebar_item_font_color_hex)),
+        sidebar_transparency=request.sidebar_transparency * 1000,
         transition_duration=request.transition_duration,
         apply_morph_transition=request.apply_morph_transition,
     )
