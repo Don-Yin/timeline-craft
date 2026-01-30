@@ -26,6 +26,7 @@ services:
       args:
         - NEXT_PUBLIC_UPLOAD_SERVICE_URL=http://localhost:8003
         - NEXT_PUBLIC_WORKER_SERVICE_URL=http://localhost:8002
+        - NEXT_PUBLIC_PREVIEW_SERVICE_URL=http://localhost:8004
     container_name: frontend-container
     hostname: frontend
     ports:
@@ -43,7 +44,8 @@ services:
       URLS: >-
         [
           { url: 'http://localhost:8003/openapi.json', name: 'Upload Service' },
-          { url: 'http://localhost:8002/openapi.json', name: 'Worker Service' }
+          { url: 'http://localhost:8002/openapi.json', name: 'Worker Service' },
+          { url: 'http://localhost:8004/openapi.json', name: 'Preview Service' }
         ]
 
   "file-store":
@@ -75,5 +77,22 @@ services:
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - MINIO_BUCKET_NAME=uploads
+    depends_on:
+      - file-store
+
+  "preview-service":
+    build:
+      context: .
+      dockerfile: preview/Dockerfile
+    container_name: preview-service-container
+    hostname: preview-service
+    ports:
+      - "8004:8004"
+    restart: unless-stopped
+    environment:
+      - MINIO_ENDPOINT=file-store:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET_UPLOADS=uploads
     depends_on:
       - file-store

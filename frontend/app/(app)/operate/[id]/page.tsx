@@ -5,7 +5,7 @@ import { createIndexItem, type IndexItem } from "@/lib/indexes";
 import { generateDummySlides } from "@/lib/slides";
 import { StepTabs, type Step } from "@/components/StepTabs";
 import { ParametersForm } from "@/components/ParametersForm";
-import { SlidePreviewListWithOverlay } from "@/components/SlidePreviewListWithOverlay";
+import { PreviewWithProgress } from "@/components/PreviewWithProgress";
 import ResizableColumns from "@/components/ResizableColumns";
 import { TagSlideManager } from "@/components/TagSlideManager";
 import { getAllThumbnails, processWithProgress, type ProgressEvent } from "@/lib/upload-client";
@@ -162,7 +162,8 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
                   <TagSlideManager slides={slides} tags={indexes} slideTagMap={slideTagMap} onSlideMove={(n, t) => setSlideTagMap((p) => ({ ...p, [n]: t }))} />
                 )
               ) : (
-                <SlidePreviewListWithOverlay
+                <PreviewWithProgress
+                  fileId={id}
                   slides={slides}
                   tags={indexes}
                   slideTagMap={slideTagMap}

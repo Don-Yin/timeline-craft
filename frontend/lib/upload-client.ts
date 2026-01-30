@@ -1,5 +1,6 @@
-const UPLOAD_SERVICE_URL = process.env.NEXT_PUBLIC_UPLOAD_SERVICE_URL || 'http://localhost:8001';
+const UPLOAD_SERVICE_URL = process.env.NEXT_PUBLIC_UPLOAD_SERVICE_URL || 'http://localhost:8003';
 const WORKER_SERVICE_URL = process.env.NEXT_PUBLIC_WORKER_SERVICE_URL || 'http://localhost:8002';
+const PREVIEW_SERVICE_URL = process.env.NEXT_PUBLIC_PREVIEW_SERVICE_URL || 'http://localhost:8004';
 
 export type FileMetadata = {
     id: string;
@@ -155,6 +156,114 @@ export async function getAllPreviewThumbnails(
     return { thumbnails: data.thumbnails, format: data.format || 'png' };
 }
 
+export type PreviewProgressEvent = {
+    stage: 'processing' | 'converting' | 'rendering' | 'done' | 'error';
+    progress: number;
+    message: string;
+    current_slide?: number;
+    total_slides?: number;
+    thumbnails?: string[];
+    format?: string;
+};
+
+export async function getFirstSlidePreview(
+    fileId: string,
+    params: PreviewParams,
+    onProgress: (event: PreviewProgressEvent) => void,
+    signal?: AbortSignal
+): Promise<PreviewThumbnailsResult> {
+    const res = await fetch(`${PREVIEW_SERVICE_URL}/render-first-slide/${fileId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+        signal,
+    });
+
+    if (!res.ok) {
+        throw new Error('Failed to start preview rendering');
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) {
+        throw new Error('No response body');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let result: PreviewThumbnailsResult = { thumbnails: [], format: 'jpeg' };
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+            if (line.startsWith('data: ')) {
+                const data = JSON.parse(line.slice(6)) as PreviewProgressEvent;
+                onProgress(data);
+
+                if (data.stage === 'done' && data.thumbnails) {
+                    result = { thumbnails: data.thumbnails, format: data.format || 'jpeg' };
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+export async function getPreviewsWithProgress(
+    fileId: string,
+    params: PreviewParams,
+    onProgress: (event: PreviewProgressEvent) => void,
+    signal?: AbortSignal
+): Promise<PreviewThumbnailsResult> {
+    const res = await fetch(`${PREVIEW_SERVICE_URL}/render-previews-with-sidebar/${fileId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+        signal,
+    });
+
+    if (!res.ok) {
+        throw new Error('Failed to start preview rendering');
+    }
+
+    const reader = res.body?.getReader();
+    if (!reader) {
+        throw new Error('No response body');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let result: PreviewThumbnailsResult = { thumbnails: [], format: 'jpeg' };
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+            if (line.startsWith('data: ')) {
+                const data = JSON.parse(line.slice(6)) as PreviewProgressEvent;
+                onProgress(data);
+
+                if (data.stage === 'done' && data.thumbnails) {
+                    result = { thumbnails: data.thumbnails, format: data.format || 'jpeg' };
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
 export type ProcessParams = {
     tags: string[];
     sidebar_width: number;
@@ -215,7 +324,7 @@ export async function processWithProgress(
 
     if (jobId) {
         onProgress({ stage: 'downloading', progress: 100, message: 'downloading file...' });
-        
+
         const downloadRes = await fetch(`${WORKER_SERVICE_URL}/download-processed/${jobId}`);
         if (!downloadRes.ok) {
             throw new Error('Failed to download processed file');
