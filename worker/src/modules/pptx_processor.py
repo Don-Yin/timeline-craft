@@ -21,6 +21,10 @@ def process_presentation(file_data: io.BytesIO, request: ProcessRequest) -> io.B
         sidebar_transparency=request.sidebar_transparency * 1000,
         transition_duration=request.transition_duration,
         apply_morph_transition=request.apply_morph_transition,
+        vertically_center=request.vertically_center,
+        rounded_indicator=request.rounded_indicator,
+        center_text=request.center_text,
+        compact_indicator=request.compact_indicator,
     )
 
     # 3. process

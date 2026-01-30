@@ -42,11 +42,15 @@ class PreviewRequest(BaseModel):
     tags: list[str] = Field(description="list of section tags, one per slide")
     sidebar_width: float = Field(default=0.12, ge=0.05, le=0.5)
     sidebar_item_height: float = Field(default=0.10, ge=0.03, le=0.3)
-    sidebar_color_hex: str = Field(default="#5A5A5A", pattern=r"^#[0-9A-Fa-f]{6}$")
+    sidebar_color_hex: str = Field(default="#6366f1", pattern=r"^#[0-9A-Fa-f]{6}$")
     indicator_color_hex: str = Field(default="#111111", pattern=r"^#[0-9A-Fa-f]{6}$")
     sidebar_item_font_color_hex: str = Field(default="#FFFFFF", pattern=r"^#[0-9A-Fa-f]{6}$")
-    sidebar_transparency: int = Field(default=50, ge=0, le=100)
-    sidebar_init_font_size: int = Field(default=18, ge=8, le=48)
+    sidebar_transparency: int = Field(default=95, ge=0, le=100)
+    sidebar_init_font_size: int = Field(default=13, ge=8, le=24)
+    vertically_center: bool = Field(default=True)
+    rounded_indicator: bool = Field(default=True)
+    center_text: bool = Field(default=False)
+    compact_indicator: bool = Field(default=True)
 
 
 def get_file_from_minio(file_id: str) -> bytes:
@@ -152,6 +156,10 @@ async def render_first_slide_sse(file_id: str, request: PreviewRequest):
             sidebar_item_font_color=RGBColor(*hex_to_rgb(request.sidebar_item_font_color_hex)),
             sidebar_transparency=request.sidebar_transparency * 1000,
             sidebar_init_font_size=request.sidebar_init_font_size,
+            vertically_center=request.vertically_center,
+            rounded_indicator=request.rounded_indicator,
+            center_text=request.center_text,
+            compact_indicator=request.compact_indicator,
         )
         move_elements_to_right(prs, config=config)
         set_sidebar_timeline(ppt=prs, tags=request.tags, config=config)
@@ -207,6 +215,10 @@ async def render_previews_with_sidebar_sse(file_id: str, request: PreviewRequest
             sidebar_item_font_color=RGBColor(*hex_to_rgb(request.sidebar_item_font_color_hex)),
             sidebar_transparency=request.sidebar_transparency * 1000,
             sidebar_init_font_size=request.sidebar_init_font_size,
+            vertically_center=request.vertically_center,
+            rounded_indicator=request.rounded_indicator,
+            center_text=request.center_text,
+            compact_indicator=request.compact_indicator,
         )
         move_elements_to_right(prs, config=config)
 

@@ -36,6 +36,10 @@ class ProgressiveProcessor:
             sidebar_transparency=self.request.sidebar_transparency * 1000,
             transition_duration=self.request.transition_duration,
             apply_morph_transition=self.request.apply_morph_transition,
+            vertically_center=self.request.vertically_center,
+            rounded_indicator=self.request.rounded_indicator,
+            center_text=self.request.center_text,
+            compact_indicator=self.request.compact_indicator,
         )
 
         yield {"stage": "moving", "progress": 10, "message": "repositioning elements..."}

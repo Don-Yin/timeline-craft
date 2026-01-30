@@ -1,5 +1,6 @@
 # plan
-[] change the function to be actually looking like that in the demo
+[x] change the function to be actually looking like that in the demo
+[] address the text size / line change issue
 [] separate landing page and make the setting page just a pop up card
 [] proper landing page with an example
 [] user and login system with wechat and google

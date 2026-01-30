@@ -39,8 +39,8 @@ export default function Landing() {
           </h1>
 
           <p className="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Transform your PowerPoint presentations with elegant timeline sidebars.
-            Upload, configure, and download
+            get your presentations with elegant timeline sidebars
+            upload, configure, and download
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -79,8 +79,7 @@ export default function Landing() {
                   </div>
                 </div>
                 <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between">
-                  <span className="text-sm text-zinc-400">Watch the demo</span>
-                  <span className="text-xs text-zinc-500">0:30</span>
+                  <span className="text-xs text-zinc-500">0:08</span>
                 </div>
               </>
             ) : (

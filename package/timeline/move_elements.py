@@ -27,9 +27,7 @@ def move_elements_to_right(ppt, config=None):
             new_height = original_height * scale_factor
 
             # new positions
-            new_left = (
-                ppt.slide_width * config.sidebar_width + (original_left - original_width / 2) * scale_factor + new_width / 2
-            )
+            new_left = ppt.slide_width * config.sidebar_width + (original_left - original_width / 2) * scale_factor + new_width / 2
             vertical_center_offset = (original_height - new_height) / 2
             new_top = original_top + vertical_center_offset
 
@@ -57,6 +55,13 @@ def set_sidebar_timeline(ppt, tags: list[str], config=None):
 
     merged_tags = merge_tags(tags)
 
+    # calculate total height of all tags
+    total_tags_height = len(merged_tags) * config.sidebar_item_height
+    # calculate vertical offset for centering if enabled
+    vertical_start_offset = 0
+    if config.vertically_center:
+        vertical_start_offset = (1.0 - total_tags_height) / 2
+
     # adding the base shapes to each slide
     for slide in ppt.slides:
         # ------------------------ shaping the sidebar itself ------------------------
@@ -67,15 +72,24 @@ def set_sidebar_timeline(ppt, tags: list[str], config=None):
         sidebar.line.color.rgb = config.sidebar_color_outline
         set_shape_transparency(sidebar, config.sidebar_transparency)
 
-        offset = 0
+        offset = vertical_start_offset
         for tag in merged_tags:
+            # calculate text box dimensions based on compact_indicator setting
+            text_left = 0
+            text_width = config.sidebar_width
+            if config.compact_indicator:
+                horizontal_padding = 0.008  # 0.8% padding on each side
+                text_left = horizontal_padding
+                text_width = config.sidebar_width - (horizontal_padding * 2)
+
             text_box = add_text_box(
                 slide=slide,
                 ppt=ppt,
-                left=0,
+                left=text_left,
                 top=offset,
-                width=config.sidebar_width,
+                width=text_width,
                 height=config.sidebar_item_height,
+                center_text=config.center_text,
             )
 
             add_paragraph(
@@ -84,6 +98,7 @@ def set_sidebar_timeline(ppt, tags: list[str], config=None):
                 font_size=config.sidebar_init_font_size,
                 font_family=config.sidebar_item_font,
                 font_color=config.sidebar_item_font_color,
+                center=config.center_text,
             )
 
             setattr(text_box, "name", f"!!SIDEBAR_{merged_tags.index(tag)}")
@@ -96,13 +111,28 @@ def set_sidebar_timeline(ppt, tags: list[str], config=None):
                     bold=True,
                 )
 
+                # choose shape type based on rounded_indicator setting
+                shape_type = MSO_SHAPE.ROUNDED_RECTANGLE if config.rounded_indicator else MSO_SHAPE.RECTANGLE
+
+                # calculate indicator dimensions based on compact_indicator setting
+                indicator_left = 0
+                indicator_width = ppt.slide_width * (config.sidebar_width + 0.01)
+                if config.compact_indicator:
+                    horizontal_padding_px = ppt.slide_width * 0.006  # 0.6% padding
+                    indicator_left = horizontal_padding_px
+                    indicator_width = ppt.slide_width * config.sidebar_width - (horizontal_padding_px * 2)
+
                 indicator = slide.shapes.add_shape(
-                    MSO_SHAPE.RECTANGLE,
-                    left=0,
-                    top=offset * ppt.slide_height,
-                    width=ppt.slide_width * (config.sidebar_width + 0.01),
-                    height=ppt.slide_height * config.sidebar_item_height,
+                    shape_type,
+                    left=int(indicator_left),
+                    top=int(offset * ppt.slide_height),
+                    width=int(indicator_width),
+                    height=int(ppt.slide_height * config.sidebar_item_height),
                 )
+
+                # set corner radius for rounded rectangles
+                if config.rounded_indicator:
+                    indicator.adjustments[0] = 0.15  # 15% corner radius
 
                 indicator.name = "!!INDICATOR"
                 indicator.fill.solid()

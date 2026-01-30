@@ -35,6 +35,10 @@ export type PreviewParams = {
     sidebar_item_font_color_hex?: string;
     sidebar_transparency?: number;
     sidebar_init_font_size?: number;
+    vertically_center?: boolean;
+    rounded_indicator?: boolean;
+    center_text?: boolean;
+    compact_indicator?: boolean;
 };
 
 export type PreviewThumbnailsResult = {
@@ -63,6 +67,10 @@ export type ProcessParams = {
     sidebar_item_font_color_hex?: string;
     sidebar_transparency?: number;
     sidebar_init_font_size?: number;
+    vertically_center?: boolean;
+    rounded_indicator?: boolean;
+    center_text?: boolean;
+    compact_indicator?: boolean;
 };
 
 export type ProgressEvent = {

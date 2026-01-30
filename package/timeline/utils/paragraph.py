@@ -17,6 +17,7 @@ def add_paragraph(
     font_size: int,
     font_family: str,
     font_color,
+    center: bool = False,
 ):
     """add text to a text box; iteratively reduce the size until fits"""
     text_frame = placeholder.text_frame
@@ -31,4 +32,4 @@ def add_paragraph(
     paragraph.font.color.rgb = font_color
     paragraph.space_before = 0
     paragraph.space_after = 0
-    paragraph.alignment = PP_PARAGRAPH_ALIGNMENT.LEFT
+    paragraph.alignment = PP_PARAGRAPH_ALIGNMENT.CENTER if center else PP_PARAGRAPH_ALIGNMENT.LEFT

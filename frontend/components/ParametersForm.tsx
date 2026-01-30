@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ColorPickerWithPresets } from './ColorPickerWithPresets';
 
 export function ParametersForm({
   sidebarWidth,
@@ -21,6 +22,14 @@ export function ParametersForm({
   onSidebarTransparencyChange,
   fontSize,
   onFontSizeChange,
+  verticallyCenter,
+  onVerticallyCenterChange,
+  roundedIndicator,
+  onRoundedIndicatorChange,
+  centerText,
+  onCenterTextChange,
+  compactIndicator,
+  onCompactIndicatorChange,
   onDownload,
   isDownloading,
   canDownload,
@@ -45,6 +54,14 @@ export function ParametersForm({
   onSidebarTransparencyChange: (value: number) => void;
   fontSize: number;
   onFontSizeChange: (value: number) => void;
+  verticallyCenter: boolean;
+  onVerticallyCenterChange: (value: boolean) => void;
+  roundedIndicator: boolean;
+  onRoundedIndicatorChange: (value: boolean) => void;
+  centerText: boolean;
+  onCenterTextChange: (value: boolean) => void;
+  compactIndicator: boolean;
+  onCompactIndicatorChange: (value: boolean) => void;
   onDownload: () => void;
   isDownloading: boolean;
   canDownload: boolean;
@@ -94,78 +111,123 @@ export function ParametersForm({
         <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
           advanced settings
         </summary>
-        <div className="mt-3 flex flex-col gap-3 text-sm">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={applyMorph}
-              onChange={(e) => onApplyMorphChange(e.target.checked)}
+        <div className="mt-3 flex flex-col gap-4 text-sm">
+          {/* Toggles Section */}
+          <div className="space-y-2.5 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={applyMorph}
+                onChange={(e) => onApplyMorphChange(e.target.checked)}
+                className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span className="text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">morph transition</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={verticallyCenter}
+                onChange={(e) => onVerticallyCenterChange(e.target.checked)}
+                className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span className="text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">center tags vertically</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={roundedIndicator}
+                onChange={(e) => onRoundedIndicatorChange(e.target.checked)}
+                className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span className="text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">rounded indicator corners</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={centerText}
+                onChange={(e) => onCenterTextChange(e.target.checked)}
+                className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span className="text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">center text in indicator</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={compactIndicator}
+                onChange={(e) => onCompactIndicatorChange(e.target.checked)}
+                className="rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span className="text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">compact indicator (narrower than sidebar)</span>
+            </label>
+          </div>
+
+          {/* Colors Section */}
+          <div className="space-y-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+            <ColorPickerWithPresets
+              label="sidebar color"
+              value={sidebarColorHex}
+              onChange={onSidebarColorHexChange}
             />
-            <span className="text-zinc-700 dark:text-zinc-300">apply morph transition</span>
-          </label>
-          <label className="flex items-center justify-between gap-3">
-            <span className="text-zinc-700 dark:text-zinc-300">sidebar color</span>
-            <div className="flex items-center gap-2">
-              <input type="color" value={sidebarColorHex} onChange={(e) => onSidebarColorHexChange(e.target.value)} className="h-8 w-12 cursor-pointer rounded border-0" />
-              <span className="w-16 text-xs text-zinc-500 font-mono">{sidebarColorHex}</span>
-            </div>
-          </label>
-          <label className="flex items-center justify-between gap-3">
-            <span className="text-zinc-700 dark:text-zinc-300">pointer box color</span>
-            <div className="flex items-center gap-2">
-              <input type="color" value={indicatorColorHex} onChange={(e) => onIndicatorColorHexChange(e.target.value)} className="h-8 w-12 cursor-pointer rounded border-0" />
-              <span className="w-16 text-xs text-zinc-500 font-mono">{indicatorColorHex}</span>
-            </div>
-          </label>
-          <label className="flex items-center justify-between gap-3">
-            <span className="text-zinc-700 dark:text-zinc-300">sidebar font color</span>
-            <div className="flex items-center gap-2">
-              <input type="color" value={sidebarFontColorHex} onChange={(e) => onSidebarFontColorHexChange(e.target.value)} className="h-8 w-12 cursor-pointer rounded border-0" />
-              <span className="w-16 text-xs text-zinc-500 font-mono">{sidebarFontColorHex}</span>
-            </div>
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
-              <span>sidebar transparency</span>
-              <span className="text-xs text-zinc-500">{sidebarTransparency}%</span>
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={5}
-              value={sidebarTransparency}
-              onChange={(e) => onSidebarTransparencyChange(Number(e.target.value))}
-              className="w-full"
+            <ColorPickerWithPresets
+              label="indicator color"
+              value={indicatorColorHex}
+              onChange={onIndicatorColorHexChange}
             />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
-              <span>font size (pt)</span>
-              <span className="text-xs text-zinc-500">{fontSize}pt</span>
-            </span>
-            <input
-              type="range"
-              min={8}
-              max={48}
-              step={1}
-              value={fontSize}
-              onChange={(e) => onFontSizeChange(Number(e.target.value))}
-              className="w-full"
+            <ColorPickerWithPresets
+              label="font color"
+              value={sidebarFontColorHex}
+              onChange={onSidebarFontColorHexChange}
             />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-zinc-700 dark:text-zinc-300">transition duration (s)</span>
-            <input
-              type="number"
-              min={0}
-              max={2}
-              step={0.1}
-              value={duration}
-              onChange={(e) => onDurationChange(Number(e.target.value))}
-              className="rounded-md border px-3 py-2"
-            />
-          </label>
+          </div>
+
+          {/* Sliders Section */}
+          <div className="space-y-3">
+            <label className="flex flex-col gap-1">
+              <span className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
+                <span>sidebar transparency</span>
+                <span className="text-xs text-zinc-500">{sidebarTransparency}%</span>
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={sidebarTransparency}
+                onChange={(e) => onSidebarTransparencyChange(Number(e.target.value))}
+                className="w-full"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
+                <span>font size</span>
+                <span className="text-xs text-zinc-500">{fontSize}pt</span>
+              </span>
+              <input
+                type="range"
+                min={8}
+                max={24}
+                step={1}
+                value={fontSize}
+                onChange={(e) => onFontSizeChange(Number(e.target.value))}
+                className="w-full"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
+                <span>transition duration</span>
+                <span className="text-xs text-zinc-500">{duration}s</span>
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={2}
+                step={0.1}
+                value={duration}
+                onChange={(e) => onDurationChange(Number(e.target.value))}
+                className="w-full"
+              />
+            </label>
+          </div>
         </div>
       </details>
 

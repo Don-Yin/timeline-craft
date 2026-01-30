@@ -20,11 +20,15 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
   const [itemHeight, setItemHeight] = useState<number>(8);
   const [duration, setDuration] = useState<number>(0.3);
   const [applyMorph, setApplyMorph] = useState<boolean>(true);
-  const [sidebarColorHex, setSidebarColorHex] = useState<string>("#5A5A5A");
+  const [sidebarColorHex, setSidebarColorHex] = useState<string>("#6366f1");
   const [indicatorColorHex, setIndicatorColorHex] = useState<string>("#111111");
   const [sidebarFontColorHex, setSidebarFontColorHex] = useState<string>("#FFFFFF");
-  const [sidebarTransparency, setSidebarTransparency] = useState<number>(90);
-  const [fontSize, setFontSize] = useState<number>(18);
+  const [sidebarTransparency, setSidebarTransparency] = useState<number>(95);
+  const [fontSize, setFontSize] = useState<number>(13);
+  const [verticallyCenter, setVerticallyCenter] = useState<boolean>(true);
+  const [roundedIndicator, setRoundedIndicator] = useState<boolean>(true);
+  const [centerText, setCenterText] = useState<boolean>(false);
+  const [compactIndicator, setCompactIndicator] = useState<boolean>(true);
   const [indexes, setIndexes] = useState<IndexItem[]>(
     ["intro", "methods", "results", "discussion", "conclusion"].map((l) => createIndexItem(l))
   );
@@ -116,6 +120,10 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
         sidebar_item_font_color_hex: sidebarFontColorHex,
         sidebar_transparency: sidebarTransparency,
         sidebar_init_font_size: fontSize,
+        vertically_center: verticallyCenter,
+        rounded_indicator: roundedIndicator,
+        center_text: centerText,
+        compact_indicator: compactIndicator,
       },
       (event: ProgressEvent) => {
         setProgress(event.progress);
@@ -168,6 +176,14 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
                     onSidebarTransparencyChange={setSidebarTransparency}
                     fontSize={fontSize}
                     onFontSizeChange={setFontSize}
+                    verticallyCenter={verticallyCenter}
+                    onVerticallyCenterChange={setVerticallyCenter}
+                    roundedIndicator={roundedIndicator}
+                    onRoundedIndicatorChange={setRoundedIndicator}
+                    centerText={centerText}
+                    onCenterTextChange={setCenterText}
+                    compactIndicator={compactIndicator}
+                    onCompactIndicatorChange={setCompactIndicator}
                     onDownload={handleDownload}
                     isDownloading={isDownloading}
                     canDownload={tagsComplete && slideCount > 0}
@@ -202,6 +218,10 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
                   sidebarFontColorHex={sidebarFontColorHex}
                   sidebarTransparency={sidebarTransparency}
                   fontSize={fontSize}
+                  verticallyCenter={verticallyCenter}
+                  roundedIndicator={roundedIndicator}
+                  centerText={centerText}
+                  compactIndicator={compactIndicator}
                   scrollRef={previewScrollRef}
                 />
               )

@@ -29,12 +29,17 @@ def build_preview_config(request: PreviewRequest) -> Configurations:
         indicator_color=RGBColor(*hex_to_rgb(request.indicator_color_hex)),
         sidebar_item_font_color=RGBColor(*hex_to_rgb(request.sidebar_item_font_color_hex)),
         sidebar_transparency=request.sidebar_transparency * 1000,
+        sidebar_init_font_size=request.sidebar_init_font_size,
+        vertically_center=request.vertically_center,
+        rounded_indicator=request.rounded_indicator,
+        center_text=request.center_text,
+        compact_indicator=request.compact_indicator,
     )
 
 
 def build_cache_key(file_id: str, request: PreviewRequest) -> str:
     """build unique cache key for preview"""
-    return f"{file_id}:{request.sidebar_width}:{request.sidebar_item_height}:{request.sidebar_color_hex}:{request.indicator_color_hex}:{request.sidebar_item_font_color_hex}:{request.sidebar_transparency}:{hash(tuple(request.tags))}"
+    return f"{file_id}:{request.sidebar_width}:{request.sidebar_item_height}:{request.sidebar_color_hex}:{request.indicator_color_hex}:{request.sidebar_item_font_color_hex}:{request.sidebar_transparency}:{request.sidebar_init_font_size}:{request.vertically_center}:{request.rounded_indicator}:{request.center_text}:{request.compact_indicator}:{hash(tuple(request.tags))}"
 
 
 def generate_preview_pdf(file_id: str, prs: Presentation, request: PreviewRequest) -> bytes:

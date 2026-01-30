@@ -2,7 +2,7 @@ from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Pt, Inches
 
 
-def add_text_box(slide, ppt, left, top, width, height):
+def add_text_box(slide, ppt, left, top, width, height, center_text=False):
     """create a clean text box without any template inheritance"""
     text_box = slide.shapes.add_textbox(
         left=int(ppt.slide_width * left),
@@ -35,7 +35,7 @@ def add_text_box(slide, ppt, left, top, width, height):
         pPr.set("marR", "0")
         pPr.set("indent", "0")
         pPr.set("lvl", "0")
-        pPr.set("algn", "l")
+        pPr.set("algn", "ctr" if center_text else "l")
 
     return text_box
 

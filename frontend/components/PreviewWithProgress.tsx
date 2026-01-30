@@ -26,12 +26,16 @@ type Props = {
   sidebarFontColorHex: string;
   sidebarTransparency: number; // percentage 0-100
   fontSize: number; // points
+  verticallyCenter?: boolean;
+  roundedIndicator?: boolean;
+  centerText?: boolean;
+  compactIndicator?: boolean;
   scrollRef?: React.Ref<HTMLDivElement>;
   showTagBadge?: boolean;
 };
 
 export function PreviewWithProgress({
-  fileId, slides, tags, slideTagMap, sidebarWidth, itemHeight, sidebarColorHex, indicatorColorHex, sidebarFontColorHex, sidebarTransparency, fontSize, scrollRef, showTagBadge = true,
+  fileId, slides, tags, slideTagMap, sidebarWidth, itemHeight, sidebarColorHex, indicatorColorHex, sidebarFontColorHex, sidebarTransparency, fontSize, verticallyCenter = false, roundedIndicator = true, centerText = true, compactIndicator = true, scrollRef, showTagBadge = true,
 }: Props) {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -92,6 +96,10 @@ export function PreviewWithProgress({
         sidebar_item_font_color_hex: debouncedFontColor,
         sidebar_transparency: debouncedTransparency,
         sidebar_init_font_size: debouncedFontSize,
+        vertically_center: verticallyCenter,
+        rounded_indicator: roundedIndicator,
+        center_text: centerText,
+        compact_indicator: compactIndicator,
       };
 
       const result = await getFirstSlidePreview(
@@ -116,7 +124,7 @@ export function PreviewWithProgress({
     });
 
     return () => controller.abort();
-  }, [fileId, slides.length, debouncedSidebarWidth, debouncedItemHeight, debouncedSidebarColor, debouncedIndicatorColor, debouncedFontColor, debouncedTransparency, debouncedFontSize, tagsArray]);
+  }, [fileId, slides.length, debouncedSidebarWidth, debouncedItemHeight, debouncedSidebarColor, debouncedIndicatorColor, debouncedFontColor, debouncedTransparency, debouncedFontSize, verticallyCenter, roundedIndicator, centerText, compactIndicator, tagsArray]);
 
   return (
     <div className="rounded-lg border p-3">
