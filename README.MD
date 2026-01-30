@@ -12,6 +12,30 @@ docker-compose up -d --build
 
 ## cache
 
+the worker service uses an in-memory python dictionary for caching (no Redis required).
+
+### how it works
+- `PdfCache` stores converted PDF bytes keyed by file_id
+- thread-safe with `threading.Lock` for concurrent requests
+- TTL-based expiration (default: 300s / 5 min)
+- max entries limit (default: 20) with FIFO eviction when full
+- used to avoid re-converting PPTX -> PDF for each thumbnail request
+
+### scalability considerations
+
+| scenario                  | behavior                                            |
+| ------------------------- | --------------------------------------------------- |
+| single worker instance    | works well, cache shared across all requests        |
+| multiple worker instances | each instance has isolated cache (no sharing)       |
+| horizontal scaling        | cache misses increase, duplicate conversions happen |
+
+for production with multiple worker replicas, consider:
+1. **sticky sessions** - route same file_id to same worker (simple, works)
+2. **Redis cache** - shared cache across all workers (better deduplication)
+3. **accept duplication** - if conversion is fast enough, just let each worker cache independently
+
+current implementation is optimized for single-instance or low-traffic scenarios. the in-memory approach avoids external dependencies and works well for MVP/demo use.
+
 ## repositories
 
 ### production architecture
@@ -23,13 +47,11 @@ docker-compose up -d --build
 | auth-service          | 0     |      | Authentication/authorization (JWT/OAuth)       |
 | billing-service       | 0     |      | Subscriptions & payments (Stripe)              |
 | orchestrator          | 1     |      | Job coordination & scheduling (queue)          |
-| upload-service        | 1     | 8001 | Signed URLs, antivirus, file intake            |
-| worker                | 2     | 8002 | PPTX processing (timeline generation)          |
-| preview-service       | 2     |      | Thumbnails/GIF rendering for UI previews       |
+| upload-service        | 1     | 8003 | Signed URLs, antivirus, file intake            |
+| worker                | 2     | 8002 | PPTX processing + thumbnail rendering          |
 | webhook-service       | 0     |      | Stripe/webhook ingestion (billing, job status) |
 | storage               | infra | 9000 | Object storage (S3/MinIO)                      |
 | db                    | infra |      | PostgreSQL: users, timelines, jobs             |
-| cache                 | infra |      | Redis: sessions, cache, job queue              |
 | cdn                   | infra | N/A  | CDN for preview assets                         |
 
 ```yaml
@@ -39,24 +61,21 @@ services:
   api-gateway:       # fastapi (routing, auth, signed uploads)
   auth-service:      # jwt/oauth (layer 0)
   billing-service:   # stripe subscriptions (layer 0)
-  webhook-service:   # stripe/webhooks → api events
+  webhook-service:   # stripe/webhooks -> api events
 
   # orchestration
   orchestrator:      # job scheduler/queue manager (layer 1)
   upload-service:    # signed uploads + validation (layer 1)
 
   # processing
-  worker:            # pptx timeline processing (python worker) (layer 2)
-  preview-service:   # thumbnails/gif generation (layer 2)
+  worker:            # pptx processing + thumbnail rendering (layer 2)
 ```
 
 ## infrastructures
 ```yml
-postgres:    # users, timelines, jobs
+postgres:    # users, timelines, jobs (future)
 s3/minio:    # pptx originals + rendered previews
-redis:       # sessions, cache, job queue
-rabbitmq:    # message broker for workers (or use redis)
-cdn:         # edge delivery for preview assets
+cdn:         # edge delivery for preview assets (future)
 ```
 
 ## WBS
@@ -92,12 +111,10 @@ graph TB
   end
 
   subgraph "Layer 2: Processing"
-    WRK[Worker<br/>PPTX timeline]
-    PREV[Preview Service<br/>png/gif]
+    WRK[Worker<br/>PPTX + thumbnails]
     JOBS --> WRK
     WRK -->|save pptx| OBJ
-    WRK --> PREV
-    PREV -->|save previews| OBJ
+    WRK -->|save previews| OBJ
   end
 
   subgraph "Webhooks"
@@ -119,7 +136,6 @@ graph TB
   style DB fill:#d4f1d4,color:#000
   style CACHE fill:#d4f1d4,color:#000
   style WRK fill:#fff4e1,color:#000
-  style PREV fill:#fff4e1,color:#000
   style WH fill:#ffe1f5,color:#000
 
   click FE "frontend/" "Open frontend app"

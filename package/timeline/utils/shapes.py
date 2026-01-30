@@ -57,4 +57,9 @@ def set_shape_transparency(shape, alpha):
     """set the transparency (alpha) of a shape"""
     ts = shape.fill._xPr.solidFill
     sF = ts.get_or_change_to_srgbClr()
-    sE = SubElement(sF, "a:alpha", val=str(alpha))
+
+    for child in list(sF):
+        if "alpha" in child.tag:
+            sF.remove(child)
+
+    SubElement(sF, "a:alpha", val=str(alpha))

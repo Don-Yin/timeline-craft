@@ -5,159 +5,84 @@ import { createIndexItem, type IndexItem } from "@/lib/indexes";
 import { generateDummySlides } from "@/lib/slides";
 import { StepTabs, type Step } from "@/components/StepTabs";
 import { ParametersForm } from "@/components/ParametersForm";
-import { SlidePreviewList } from "@/components/SlidePreviewList";
+import { SlidePreviewListWithOverlay } from "@/components/SlidePreviewListWithOverlay";
 import ResizableColumns from "@/components/ResizableColumns";
 import { TagSlideManager } from "@/components/TagSlideManager";
-import { getThumbnail, processWithProgress, getSlideCount, type ProgressEvent } from "@/lib/upload-client";
+import { getAllThumbnails, processWithProgress, type ProgressEvent } from "@/lib/upload-client";
 
 export default function Operate({ params }: { params: Promise<{ id: string }> }) {
-  // Unwrap params using React.use()
   const { id } = use(params);
-
-  const [file, setFile] = useState<File | null>(null);
-  // ... rest of state ...
 
   const [slideImages, setSlideImages] = useState<string[]>([]);
   const [loadingThumbnails, setLoadingThumbnails] = useState(false);
   const [slideCount, setSlideCount] = useState<number>(0);
-
-  useEffect(() => {
-    async function init() {
-      setLoadingThumbnails(true);
-      // 1. Get slide count
-      const count = await getSlideCount(id);
-      const actualCount = count > 0 ? count : 36; // fallback to 36 if 0 (e.g. fail or empty)
-      setSlideCount(actualCount);
-
-      // 2. Load thumbnails based on count
-      const loadedImages: string[] = [];
-      for (let i = 0; i < actualCount; i++) {
-        try {
-          const b64 = await getThumbnail(id, i);
-          if (b64) {
-            loadedImages.push(`data:image/png;base64,${b64}`);
-          } else {
-            loadedImages.push('');
-          }
-        } catch (e) {
-          loadedImages.push('');
-        }
-      }
-      setSlideImages(loadedImages);
-      setLoadingThumbnails(false);
-    }
-
-    if (id) {
-      init();
-    }
-  }, [id]);
-
-  // ... rest of existing code ...
-
   const [sidebarWidth, setSidebarWidth] = useState<number>(12);
   const [itemHeight, setItemHeight] = useState<number>(10);
   const [duration, setDuration] = useState<number>(0.3);
   const [applyMorph, setApplyMorph] = useState<boolean>(true);
   const [indexes, setIndexes] = useState<IndexItem[]>(
-    ["intro", "methods", "results", "discussion", "conclusion"].map((l) =>
-      createIndexItem(l)
-    )
+    ["intro", "methods", "results", "discussion", "conclusion"].map((l) => createIndexItem(l))
   );
-
-  // Merge loaded images with dummy slides structure
-  // In reality, we should generate slides based on actual count.
-  // For now, we override the 'src' of dummySlides if we have a real image.
-  const slides = useMemo(() => (
-    generateDummySlides(slideCount).map((s, i) => ({
-      ...s,
-      src: (slideImages[i] || s.src) as string // use loaded thumbnail or fallback to dummy
-    }))
-  ), [slideCount, slideImages]);
-
-  const [slideTagMap, setSlideTagMap] = useState<Record<number, string | null>>(
-    {}
-  );
+  const [slideTagMap, setSlideTagMap] = useState<Record<number, string | null>>({});
   const [activeTab, setActiveTab] = useState<"tags" | "params">("tags");
   const [isDownloading, setIsDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
+
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
 
-  // Helper to evenly distribute slides among tags
-  const distributeSlides = useCallback((tags: IndexItem[]) => {
-    if (slideCount === 0) {
-      setSlideTagMap({});
-      return;
-    }
+  const slides = useMemo(() => (
+    generateDummySlides(slideCount).map((s, i) => ({ ...s, src: (slideImages[i] || s.src) as string }))
+  ), [slideCount, slideImages]);
 
-    if (tags.length === 0) {
-      setSlideTagMap(
-        Object.fromEntries(
-          Array.from({ length: slideCount }, (_, idx) => idx + 1).map((id) => [id, null])
-        )
-      );
-      return;
-    }
-
-    const map: Record<number, string | null> = {};
-    const chunkSize = Math.max(1, Math.ceil(slideCount / tags.length));
-    Array.from({ length: slideCount }, (_, idx) => idx + 1).forEach((slideId, index) => {
-      const tagIndex = Math.floor(index / chunkSize);
-      const tag = tags[Math.min(tagIndex, tags.length - 1)];
-      map[slideId] = tag?.id ?? null;
-    });
-    setSlideTagMap(map);
-  }, [slideCount]);
-
-  // Initial distribution and whenever tags change (number or ids)
-  // Note: We might want to preserve manual overrides, but requirement says "by default evenly assigned"
-  // when tags are created. For simplicity, we re-distribute when the *count* of tags changes or if we have no map yet.
-  useEffect(() => {
-    // Re-distribute whenever tag count changes (e.g., tag added/removed) or slide count updates.
-    distributeSlides(indexes);
-  }, [indexes.length, distributeSlides]);
-  // ^ Only re-distribute if number of tags changes. Renaming shouldn't trigger it.
-
-  function handleTagsChange(newIndexes: IndexItem[]) {
-    setIndexes(newIndexes);
-    // If length is different, useEffect will handle it.
-    // If just reordered, we might want to re-distribute to match new order?
-    // "Default evenly assigned" implies the first tag gets the first chunk.
-    // If I move "Intro" to the end, should "Intro" now get the last chunk?
-    // Yes, probably.
-    if (newIndexes.length === indexes.length) {
-      // Check if order changed
-      const orderChanged = newIndexes.some((item, i) => item.id !== indexes[i].id);
-      if (orderChanged) {
-        distributeSlides(newIndexes);
-      }
-    }
-  }
-
-  function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const selected = event.target.files?.[0] ?? null;
-    setFile(selected);
-  }
-
-  function onSlideTagChange(slideNum: number, tagId: string | null) {
-    setSlideTagMap((prev) => ({ ...prev, [slideNum]: tagId }));
-  }
-
-  const tagsComplete = indexes.length > 0;
-  const paramsComplete = true;
-
-  const steps: Step[] = [
-    { id: "tags", label: "1. set tags", completed: tagsComplete },
-    { id: "params", label: "2. choose params", completed: paramsComplete },
-  ];
-
-  function buildTagsArray(): string[] {
+  const buildTagsArray = useCallback((): string[] => {
     return Array.from({ length: slideCount }, (_, idx) => {
       const slideNum = idx + 1;
       const tagId = slideTagMap[slideNum];
       const tag = indexes.find((t) => t.id === tagId);
       return tag?.label ?? "untitled";
     });
+  }, [slideCount, slideTagMap, indexes]);
+
+  const distributeSlides = useCallback((tags: IndexItem[]) => {
+    if (slideCount === 0) {
+      setSlideTagMap({});
+      return;
+    }
+    if (tags.length === 0) {
+      setSlideTagMap(Object.fromEntries(Array.from({ length: slideCount }, (_, idx) => [idx + 1, null])));
+      return;
+    }
+    const map: Record<number, string | null> = {};
+    const chunkSize = Math.max(1, Math.ceil(slideCount / tags.length));
+    Array.from({ length: slideCount }, (_, idx) => idx + 1).forEach((slideId, index) => {
+      const tagIndex = Math.floor(index / chunkSize);
+      map[slideId] = tags[Math.min(tagIndex, tags.length - 1)]?.id ?? null;
+    });
+    setSlideTagMap(map);
+  }, [slideCount]);
+
+  useEffect(() => {
+    async function init() {
+      setLoadingThumbnails(true);
+      const thumbnails = await getAllThumbnails(id);
+      setSlideCount(thumbnails.length || 36);
+      setSlideImages(thumbnails.map(b64 => b64 ? `data:image/png;base64,${b64}` : ''));
+      setLoadingThumbnails(false);
+    }
+    if (id) init();
+  }, [id]);
+
+  useEffect(() => {
+    distributeSlides(indexes);
+  }, [indexes.length, distributeSlides]);
+
+  function handleTagsChange(newIndexes: IndexItem[]) {
+    setIndexes(newIndexes);
+    if (newIndexes.length === indexes.length) {
+      const orderChanged = newIndexes.some((item, i) => item.id !== indexes[i].id);
+      if (orderChanged) distributeSlides(newIndexes);
+    }
   }
 
   async function handleDownload() {
@@ -184,6 +109,12 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
     setProgress(0);
     setProgressMessage("");
   }
+
+  const tagsComplete = indexes.length > 0;
+  const steps: Step[] = [
+    { id: "tags", label: "1. set tags", completed: tagsComplete },
+    { id: "params", label: "2. choose params", completed: true },
+  ];
 
   return (
     <div className="flex min-h-screen w-full bg-zinc-50 font-sans dark:bg-black">
@@ -220,28 +151,31 @@ export default function Operate({ params }: { params: Promise<{ id: string }> })
             }
             right={
               activeTab === "tags" ? (
-                <TagSlideManager
-                  slides={slides}
-                  tags={indexes}
-                  slideTagMap={slideTagMap}
-                  onSlideMove={onSlideTagChange}
-                />
+                loadingThumbnails ? (
+                  <div className="flex h-[400px] items-center justify-center">
+                    <div className="flex items-center gap-2 text-sm text-zinc-500">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+                      loading slides...
+                    </div>
+                  </div>
+                ) : (
+                  <TagSlideManager slides={slides} tags={indexes} slideTagMap={slideTagMap} onSlideMove={(n, t) => setSlideTagMap((p) => ({ ...p, [n]: t }))} />
+                )
               ) : (
-                <SlidePreviewList
+                <SlidePreviewListWithOverlay
                   slides={slides}
-                  mode="view"
                   tags={indexes}
                   slideTagMap={slideTagMap}
-                  // onSlideTagChange not needed in view mode usually
+                  sidebarWidth={sidebarWidth}
+                  itemHeight={itemHeight}
                   scrollRef={previewScrollRef}
-                  showTagBadge={true}
                 />
               )
             }
           />
         </section>
         <p className="text-xs text-zinc-500">
-          showing {slideCount || 36} {slideCount === 1 ? "slide" : "slides"} as placeholders. actual previews will appear once the rendering pipeline is wired end-to-end.
+          showing {slideCount || 36} {slideCount === 1 ? "slide" : "slides"} previews
         </p>
       </main>
     </div>

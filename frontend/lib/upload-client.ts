@@ -86,13 +86,73 @@ export async function getSlideCount(fileId: string): Promise<number> {
 export async function getThumbnail(fileId: string, slideIndex: number): Promise<string> {
     const res = await fetch(`${WORKER_SERVICE_URL}/get-thumbnail/${fileId}/${slideIndex}`);
     if (!res.ok) {
-        // Fallback or throw
-        // throw new Error('Failed to get thumbnail');
-        // Return a placeholder or empty string to handle gracefully in UI
         return '';
     }
     const data: ThumbnailResponse = await res.json();
     return data.image_base64;
+}
+
+export type AllThumbnailsResponse = {
+    file_id: string;
+    thumbnails: string[];
+    format?: string; // 'png' or 'jpeg'
+};
+
+export async function getAllThumbnails(fileId: string): Promise<string[]> {
+    const res = await fetch(`${WORKER_SERVICE_URL}/get-all-thumbnails/${fileId}`);
+    if (!res.ok) {
+        return [];
+    }
+    const data: AllThumbnailsResponse = await res.json();
+    return data.thumbnails;
+}
+
+export type PreviewParams = {
+    tags: string[];
+    sidebar_width: number;
+    sidebar_item_height: number;
+};
+
+export async function getPreviewThumbnail(
+    fileId: string,
+    slideIndex: number,
+    params: PreviewParams,
+    signal?: AbortSignal
+): Promise<string> {
+    const res = await fetch(`${WORKER_SERVICE_URL}/get-preview-thumbnail/${fileId}/${slideIndex}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+        signal,
+    });
+    if (!res.ok) {
+        return '';
+    }
+    const data: ThumbnailResponse = await res.json();
+    return data.image_base64;
+}
+
+export type PreviewThumbnailsResult = {
+    thumbnails: string[];
+    format: string;
+};
+
+export async function getAllPreviewThumbnails(
+    fileId: string,
+    params: PreviewParams,
+    signal?: AbortSignal
+): Promise<PreviewThumbnailsResult> {
+    const res = await fetch(`${WORKER_SERVICE_URL}/get-all-preview-thumbnails/${fileId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
+        signal,
+    });
+    if (!res.ok) {
+        return { thumbnails: [], format: 'png' };
+    }
+    const data: AllThumbnailsResponse = await res.json();
+    return { thumbnails: data.thumbnails, format: data.format || 'png' };
 }
 
 export type ProcessParams = {
@@ -154,11 +214,14 @@ export async function processWithProgress(
     }
 
     if (jobId) {
+        onProgress({ stage: 'downloading', progress: 100, message: 'downloading file...' });
+        
         const downloadRes = await fetch(`${WORKER_SERVICE_URL}/download-processed/${jobId}`);
         if (!downloadRes.ok) {
             throw new Error('Failed to download processed file');
         }
 
+        onProgress({ stage: 'downloading', progress: 100, message: 'preparing download...' });
         const blob = await downloadRes.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');

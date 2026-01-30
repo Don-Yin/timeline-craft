@@ -33,21 +33,30 @@ def convert_pptx_to_pdf_bytes(file_id: str, pptx_bytes: bytes) -> bytes:
 
 
 def render_slide_thumbnail(pdf_bytes: bytes, slide_index: int, target_width: int = 640) -> str:
-    try:
-        doc = fitz.open("pdf", pdf_bytes)
-    except Exception as exc:
-        logger.error(f"unable to open converted pdf: {exc}")
-        raise HTTPException(status_code=500, detail="Failed to open converted PDF")
-
+    """render a single slide as base64 png"""
+    doc = fitz.open("pdf", pdf_bytes)
     if slide_index < 0 or slide_index >= doc.page_count:
         doc.close()
-        raise HTTPException(status_code=404, detail="Slide index out of range")
+        raise HTTPException(status_code=404, detail="slide index out of range")
 
     page = doc.load_page(slide_index)
-    width = page.rect.width or 1
-    scale = target_width / width
-    matrix = fitz.Matrix(scale, scale)
-    pix = page.get_pixmap(matrix=matrix, alpha=False)
-    png_bytes = pix.tobytes("png")
+    scale = target_width / (page.rect.width or 1)
+    pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
+    result = base64.b64encode(pix.tobytes("png")).decode("utf-8")
     doc.close()
-    return base64.b64encode(png_bytes).decode("utf-8")
+    return result
+
+
+def render_all_thumbnails(pdf_bytes: bytes, target_width: int = 640, use_jpeg: bool = False) -> list[str]:
+    """render all slides as base64 images in one pass"""
+    doc = fitz.open("pdf", pdf_bytes)
+    results = []
+    fmt = "jpeg" if use_jpeg else "png"
+    for i in range(doc.page_count):
+        page = doc.load_page(i)
+        scale = target_width / (page.rect.width or 1)
+        pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
+        img_bytes = pix.tobytes(fmt) if fmt == "png" else pix.tobytes("jpeg", jpg_quality=75)
+        results.append(base64.b64encode(img_bytes).decode("utf-8"))
+    doc.close()
+    return results

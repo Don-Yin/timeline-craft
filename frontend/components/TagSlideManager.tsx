@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -8,8 +8,8 @@ import {
   useSensor,
   useSensors,
   DragOverlay,
-  DragStartEvent,
   DragEndEvent,
+  DragOverEvent,
   defaultDropAnimationSideEffects,
   DropAnimation,
   useDraggable,
@@ -26,256 +26,244 @@ type TagSlideManagerProps = {
   onSlideMove: (slideId: number, newTagId: string | null) => void;
 };
 
-// Draggable slide item
-function DraggableSlide({
-  id,
-  slide,
-  tagId,
-}: {
-  id: string;
-  slide: Slide;
-  tagId: string | null;
-}) {
+function DraggableSlide({ id, slide }: { id: string; slide: Slide }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id,
-    data: { slideNum: slide.id, tagId, type: "slide", src: slide.src },
+    data: { slideNum: slide.id, src: slide.src },
   });
-
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.3 : 1,
-  };
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{ transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 50 : "auto" }}
       {...attributes}
       {...listeners}
-      className="relative aspect-video cursor-grab overflow-hidden rounded-md border bg-zinc-100 dark:bg-zinc-800 transition-opacity"
+      className="relative aspect-video cursor-grab overflow-hidden rounded-md border bg-zinc-100 dark:bg-zinc-800 transition-all hover:ring-2 hover:ring-primary/50"
     >
-      <img
-        src={slide.src}
-        alt={`Slide ${slide.id}`}
-        className="h-full w-full object-cover pointer-events-none"
-      />
-      <span className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded bg-black/50 text-[10px] font-medium text-white backdrop-blur-sm">
+      <img src={slide.src} alt={`Slide ${slide.id}`} className="h-full w-full object-cover pointer-events-none" />
+      <span className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded bg-black/60 text-[10px] font-medium text-white">
         {slide.id}
       </span>
     </div>
   );
 }
 
-// Droppable container for a tag
-function DroppableTagContainer({
-  id,
-  tagId,
-  items,
-  children,
-  activeId,
-}: {
-  id: string;
-  tagId: string | null;
-  items: Slide[];
-  children: React.ReactNode;
-  activeId: string | null;
-}) {
-  const { setNodeRef, isOver } = useDroppable({
-    id,
-    data: { tagId, type: "container" },
-  });
-
-  // Highlight if dragging over
-  const isDragOver = isOver;
+function DroppableTagContainer({ id, isEmpty, isOver, children }: { id: string; isEmpty: boolean; isOver: boolean; children: React.ReactNode }) {
+  const { setNodeRef } = useDroppable({ id });
 
   return (
     <div
       ref={setNodeRef}
-      className={`grid grid-cols-3 gap-2 rounded-md border border-dashed p-2 min-h-[100px] transition-colors ${isDragOver
-        ? "bg-primary/10 border-primary dark:bg-primary/20"
-        : "bg-zinc-50/50 border-zinc-200 dark:bg-zinc-900/50 dark:border-zinc-800"
-        }`}
+      className={`grid grid-cols-3 gap-2 rounded-lg border-2 border-dashed p-3 min-h-[100px] transition-all duration-200 ${
+        isOver ? "bg-emerald-50 border-emerald-500 dark:bg-emerald-950/30 dark:border-emerald-500 scale-[1.01]" : "bg-zinc-50/50 border-zinc-200 dark:bg-zinc-900/50 dark:border-zinc-700"
+      }`}
     >
       {children}
-      {items.length === 0 && !activeId && (
-        <div className="col-span-3 flex h-full items-center justify-center text-xs text-zinc-400 italic">
-          drop slides here to start section
-        </div>
-      )}
+      {isEmpty && <div className="col-span-3 flex h-full items-center justify-center text-sm text-zinc-400 italic">drop slides here</div>}
     </div>
   );
 }
 
-export function TagSlideManager({
-  slides,
-  tags,
-  slideTagMap,
-  onSlideMove,
-}: TagSlideManagerProps) {
-  const [activeId, setActiveId] = useState<string | null>(null);
-  // Keep track of the active slide image for the overlay
-  const [activeSrc, setActiveSrc] = useState<string | null>(null);
+function TagAccordion({ tag, slidesInTag, isOver, containerId, activeId, isExpanded, onToggle }: {
+  tag: IndexItem;
+  slidesInTag: Slide[];
+  isOver: boolean;
+  containerId: string;
+  activeId: string | null;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | "auto">("auto");
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor)
+  useEffect(() => {
+    if (contentRef.current) {
+      setHeight(isExpanded ? contentRef.current.scrollHeight : 0);
+    }
+  }, [isExpanded, slidesInTag.length]);
+
+  return (
+    <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden transition-all duration-300">
+      <button
+        onClick={onToggle}
+        className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${
+          isExpanded ? "bg-zinc-100 dark:bg-zinc-800" : "bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <span className={`transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}>
+            <svg className="w-4 h-4 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </span>
+          <span className="font-medium text-zinc-800 dark:text-zinc-200">{tag.label}</span>
+        </div>
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+          slidesInTag.length > 0 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300" : "bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400"
+        }`}>
+          {slidesInTag.length}
+        </span>
+      </button>
+
+      <div
+        style={{ height: typeof height === "number" ? `${height}px` : height }}
+        className="transition-[height] duration-300 ease-out overflow-hidden"
+      >
+        <div ref={contentRef} className="p-3">
+          <DroppableTagContainer id={containerId} isEmpty={slidesInTag.length === 0 && !activeId} isOver={isOver}>
+            {slidesInTag.map((s) => (
+              <DraggableSlide key={`slide-${s.id}`} id={`slide-${s.id}`} slide={s} />
+            ))}
+          </DroppableTagContainer>
+        </div>
+      </div>
+    </div>
   );
+}
 
+export function TagSlideManager({ slides, tags, slideTagMap, onSlideMove }: TagSlideManagerProps) {
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeSrc, setActiveSrc] = useState<string | null>(null);
+  const [overContainerId, setOverContainerId] = useState<string | null>(null);
+  const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set(tags.map(t => t.id)));
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor));
   const activeSlideNum = activeId ? parseInt(activeId.replace("slide-", ""), 10) : null;
 
-  // Helper to find the range of slides for a tag
-  function getSlidesForTag(tagId: string | null) {
-    return slides.filter(s => (slideTagMap[s.id] ?? null) === tagId);
+  useEffect(() => {
+    setExpandedTags(new Set(tags.map(t => t.id)));
+  }, [tags.length]);
+
+  function getSlidesForTag(tagId: string) {
+    return slides.filter(s => slideTagMap[s.id] === tagId);
   }
 
-  // Logic to handle moving boundaries
+  function toggleTag(tagId: string) {
+    setExpandedTags(prev => {
+      const next = new Set(prev);
+      if (next.has(tagId)) next.delete(tagId);
+      else next.add(tagId);
+      return next;
+    });
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { over } = event;
+    if (over?.id) {
+      const overId = over.id as string;
+      if (overId.startsWith("container-")) {
+        setOverContainerId(overId);
+        const tagId = overId.replace("container-", "");
+        if (!expandedTags.has(tagId)) {
+          setExpandedTags(prev => new Set([...prev, tagId]));
+        }
+      }
+    } else {
+      setOverContainerId(null);
+    }
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setActiveId(null);
     setActiveSrc(null);
+    setOverContainerId(null);
 
     if (!over) return;
 
-    // Source slide info
-    const activeSlideNum = active.data.current?.slideNum;
-    const sourceTagId = active.data.current?.tagId;
+    const draggedSlideNum = active.data.current?.slideNum as number;
+    if (!draggedSlideNum) return;
 
-    // Target tag info
+    const overId = over.id as string;
     let targetTagId: string | null = null;
 
-    if (over.data.current?.type === "container") {
-      targetTagId = over.data.current.tagId;
-    } else if (over.data.current?.type === "slide") {
-      targetTagId = over.data.current.tagId;
-    } else {
-      // Fallback parsing ID
-      const overId = over.id as string;
-      if (overId.startsWith("container-")) {
-        targetTagId = overId.replace("container-", "");
-        if (targetTagId === "untagged") targetTagId = null;
-      } else if (overId.startsWith("slide-")) {
-        const sNum = parseInt(overId.replace("slide-", ""), 10);
-        targetTagId = slideTagMap[sNum] ?? null;
-      }
+    if (overId.startsWith("container-")) targetTagId = overId.replace("container-", "");
+    else if (overId.startsWith("slide-")) {
+      const targetSlideNum = parseInt(overId.replace("slide-", ""), 10);
+      targetTagId = slideTagMap[targetSlideNum] ?? null;
     }
 
-    // If dropping on same tag, do nothing
+    if (!targetTagId) return;
+
+    const sourceTagId = slideTagMap[draggedSlideNum];
     if (sourceTagId === targetTagId) return;
 
-    // Identify indices of tags to check adjacency
-    // Create an ordered list of "tag groups" including untagged if any?
-    // Actually, we just care about the tags list order.
     const sourceTagIndex = tags.findIndex(t => t.id === sourceTagId);
     const targetTagIndex = tags.findIndex(t => t.id === targetTagId);
 
-    // Only allow moving to adjacent tags
-    const isNext = targetTagIndex === sourceTagIndex + 1;
-    const isPrev = targetTagIndex === sourceTagIndex - 1;
+    if (sourceTagIndex === -1 || targetTagIndex === -1) return;
 
-    if (!isNext && !isPrev) return; // Enforce adjacency constraint
+    const allSlidesSorted = [...slides].sort((a, b) => a.id - b.id);
+    const draggedSlideIndex = allSlidesSorted.findIndex(s => s.id === draggedSlideNum);
 
-    // Logic:
-    // If moving to NEXT tag:
-    //   We are dragging a slide from Source to Target (which is After Source).
-    //   This slide, and ALL subsequent slides in Source, should move to Target.
-    //   Effectively, the "Start of Target" moves backwards to this slide.
-    //
-    // If moving to PREV tag:
-    //   We are dragging a slide from Source to Target (which is Before Source).
-    //   This slide, and ALL preceding slides in Source, should move to Target.
-    //   Effectively, the "End of Target" moves forwards to include this slide.
-
-    // Get all slides currently in Source Tag
-    const sourceSlides = getSlidesForTag(sourceTagId);
-    const slideIndexInSource = sourceSlides.findIndex(s => s.id === activeSlideNum);
-
-    if (slideIndexInSource === -1) return;
-
-    if (isNext) {
-      // Move [slideIndexInSource ... end] to Target
-      const slidesToMove = sourceSlides.slice(slideIndexInSource);
-      slidesToMove.forEach(s => onSlideMove(s.id, targetTagId));
-    } else if (isPrev) {
-      // Move [0 ... slideIndexInSource] to Target
-      const slidesToMove = sourceSlides.slice(0, slideIndexInSource + 1);
-      slidesToMove.forEach(s => onSlideMove(s.id, targetTagId));
+    if (targetTagIndex > sourceTagIndex) {
+      allSlidesSorted.slice(draggedSlideIndex).filter(s => {
+        const sTagIndex = tags.findIndex(t => t.id === slideTagMap[s.id]);
+        return sTagIndex >= sourceTagIndex && sTagIndex < targetTagIndex;
+      }).forEach(s => onSlideMove(s.id, targetTagId));
+    } else {
+      allSlidesSorted.slice(0, draggedSlideIndex + 1).filter(s => {
+        const sTagIndex = tags.findIndex(t => t.id === slideTagMap[s.id]);
+        return sTagIndex > targetTagIndex && sTagIndex <= sourceTagIndex;
+      }).forEach(s => onSlideMove(s.id, targetTagId));
     }
   }
 
-  const dropAnimation: DropAnimation = {
-    sideEffects: defaultDropAnimationSideEffects({
-      styles: {
-        active: {
-          opacity: "0.5",
-        },
-      },
-    }),
-  };
+  const dropAnimation: DropAnimation = { sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: "0.5" } } }) };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={(e) => {
-        setActiveId(e.active.id as string);
-        setActiveSrc(e.active.data.current?.src);
-      }}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="flex flex-col gap-6 pb-20">
-        {tags.map((tag) => {
-          const slidesInTag = getSlidesForTag(tag.id);
-          const containerId = `container-${tag.id}`;
-
-          return (
-            <div key={tag.id} className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 border-b pb-1">
-                <span className="font-medium text-sm text-zinc-700 dark:text-zinc-300">
-                  {tag.label}
-                </span>
-                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500 dark:bg-zinc-800">
-                  {slidesInTag.length}
-                </span>
-              </div>
-
-              <DroppableTagContainer
-                id={containerId}
-                tagId={tag.id}
-                items={slidesInTag}
-                activeId={activeId}
-              >
-                {slidesInTag.map((s) => (
-                  <DraggableSlide
-                    key={`slide-${s.id}`}
-                    id={`slide-${s.id}`}
-                    slide={s}
-                    tagId={tag.id}
-                  />
-                ))}
-              </DroppableTagContainer>
-            </div>
-          );
-        })}
+    <div className="flex flex-col h-[calc(100vh-280px)] min-h-[400px]">
+      <div className="flex items-center justify-between mb-3 px-1">
+        <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">arrange slides by section</h3>
+        <div className="flex gap-2">
+          <button onClick={() => setExpandedTags(new Set(tags.map(t => t.id)))} className="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+            expand all
+          </button>
+          <span className="text-zinc-300 dark:text-zinc-600">|</span>
+          <button onClick={() => setExpandedTags(new Set())} className="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+            collapse all
+          </button>
+        </div>
       </div>
 
-      <DragOverlay dropAnimation={dropAnimation}>
-        {activeSlideNum ? (
-          <div className="w-[200px] aspect-video overflow-hidden rounded-md shadow-2xl ring-2 ring-primary">
-            <img
-              src={activeSrc || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 text-white font-medium text-sm">
-              adjusting boundary...
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={(e) => { setActiveId(e.active.id as string); setActiveSrc(e.active.data.current?.src); }}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex-1 overflow-y-auto pr-2 space-y-2">
+          {tags.map((tag) => {
+            const slidesInTag = getSlidesForTag(tag.id);
+            const containerId = `container-${tag.id}`;
+
+            return (
+              <TagAccordion
+                key={tag.id}
+                tag={tag}
+                slidesInTag={slidesInTag}
+                isOver={overContainerId === containerId}
+                containerId={containerId}
+                activeId={activeId}
+                isExpanded={expandedTags.has(tag.id)}
+                onToggle={() => toggleTag(tag.id)}
+              />
+            );
+          })}
+        </div>
+
+        <DragOverlay dropAnimation={dropAnimation}>
+          {activeSlideNum && activeSrc ? (
+            <div className="w-[180px] aspect-video overflow-hidden rounded-lg shadow-2xl ring-2 ring-emerald-500 bg-white dark:bg-zinc-900">
+              <img src={activeSrc} alt="" className="h-full w-full object-cover" />
+              <span className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded bg-emerald-600 text-[10px] font-bold text-white">
+                {activeSlideNum}
+              </span>
             </div>
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+    </div>
   );
 }

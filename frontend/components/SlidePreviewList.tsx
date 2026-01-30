@@ -11,6 +11,7 @@ export function SlidePreviewList({
   onSlideTagChange,
   scrollRef,
   showTagBadge = true,
+  isLoading = false,
 }: {
   slides: Slide[];
   mode?: "view" | "associate";
@@ -19,6 +20,7 @@ export function SlidePreviewList({
   onSlideTagChange?: (slideNum: number, tagId: string) => void;
   scrollRef?: React.Ref<HTMLDivElement>;
   showTagBadge?: boolean;
+  isLoading?: boolean;
 }) {
   const innerRef = useRef<HTMLDivElement | null>(null);
   const setRef = (node: HTMLDivElement | null) => {
@@ -31,8 +33,14 @@ export function SlidePreviewList({
 
   return (
     <div className="rounded-lg border p-3">
+      {isLoading && (
+        <div className="mb-3 flex items-center gap-2 text-sm text-zinc-500">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+          <span>generating preview...</span>
+        </div>
+      )}
       <div ref={setRef} className="max-h-[70vh] overflow-y-auto">
-        <div className="flex flex-col gap-4">
+        <div className={`flex flex-col gap-4 transition-opacity duration-200 ${isLoading ? 'opacity-50' : ''}`}>
           {slides.map((s) => (
             <div key={s.id} className="flex items-start gap-3">
               <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded bg-secondary text-xs text-secondary-foreground">

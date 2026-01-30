@@ -107,12 +107,24 @@ export function ParametersForm({
         {isDownloading ? (
           <div className="relative w-full h-full">
             <div
-              className="absolute inset-0 bg-emerald-500 transition-all duration-300 ease-out"
+              className={`absolute inset-0 bg-emerald-500 transition-all duration-300 ease-out ${progress >= 100 ? 'animate-pulse' : ''}`}
               style={{ width: `${progress}%` }}
             />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-sm font-medium">{progress}%</span>
-              <span className="text-xs opacity-80 truncate max-w-[90%]">{progressMessage}</span>
+              {progress >= 100 ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span className="text-sm font-medium">finalizing</span>
+                  </div>
+                  <span className="text-xs opacity-80">{progressMessage}</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-sm font-medium">{progress}%</span>
+                  <span className="text-xs opacity-80 truncate max-w-[90%]">{progressMessage}</span>
+                </>
+              )}
             </div>
           </div>
         ) : (

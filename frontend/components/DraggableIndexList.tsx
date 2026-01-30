@@ -260,9 +260,9 @@ export default function DraggableIndexList({
   };
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-base font-medium">{title}</h3>
+    <div className="flex flex-col h-[calc(100vh-280px)] min-h-[400px]">
+      <div className="flex items-center justify-between mb-3 px-1">
+        <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">{title}</h3>
         <span className="text-xs text-zinc-500">{items.length} tags</span>
       </div>
 
@@ -274,7 +274,7 @@ export default function DraggableIndexList({
         onDragCancel={handleDragCancel}
       >
         <SortableContext items={items} strategy={verticalListSortingStrategy}>
-          <ul className="flex flex-col">
+          <ul className="flex-1 overflow-y-auto pr-2 flex flex-col">
             <InsertZone insertAt={0} onInsert={handleInsert} isDragging={isDragging} />
             {items.map((item, i) => (
               <React.Fragment key={item.id}>
@@ -291,8 +291,8 @@ export default function DraggableIndexList({
         </DragOverlay>
       </DndContext>
 
-      <p className="text-xs text-zinc-500 mt-2">
-        hover between items to add new tags. drag to reorder.
+      <p className="text-xs text-zinc-500 mt-3 px-1">
+        hover between items to add new tags
       </p>
     </div>
   );

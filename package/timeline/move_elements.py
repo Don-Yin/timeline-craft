@@ -108,7 +108,7 @@ def set_sidebar_timeline(ppt, tags: list[str], config=None):
                 indicator.fill.solid()
                 indicator.fill.fore_color.rgb = config.indicator_color
                 indicator.line.color.rgb = config.sidebar_color_outline
-                set_shape_transparency(sidebar, config.indicator_transparency)
+                set_shape_transparency(indicator, config.indicator_transparency)
                 send_backwards(slide, indicator)
 
             offset += config.sidebar_item_height
@@ -163,6 +163,6 @@ def set_morph_transitions(ppt, config=None):
 
         fallback = SubElement(alt_content, QName(ns_mc, "Fallback"))
         trans_fallback = SubElement(fallback, QName(ns_p, "transition"))
-        fade = SubElement(trans_fallback, QName(ns_p, "fade"))
+        SubElement(trans_fallback, QName(ns_p, "fade"))
 
         sld.insert(idx, alt_content)
