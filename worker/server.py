@@ -10,7 +10,7 @@ app = FastAPI(
         {"name": "thumbnails", "description": "Slide thumbnail generation"},
         {"name": "processing", "description": "PowerPoint processing and export"},
         {"name": "health", "description": "Service health checks"},
-    ]
+    ],
 )
 
 app.add_middleware(

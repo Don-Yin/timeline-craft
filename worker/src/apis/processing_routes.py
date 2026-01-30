@@ -1,4 +1,5 @@
 """presentation processing and download endpoints"""
+
 import io
 import json
 import logging
@@ -12,7 +13,13 @@ from fastapi.responses import StreamingResponse
 from .schemas import ProcessRequest, ProcessResponse, ListProcessedResponse
 from .thumbnail_routes import pdf_cache
 from .preview_routes import get_preview_cache
-from ..modules.storage import get_file_from_minio, upload_file_to_minio, list_files_in_bucket, MINIO_BUCKET_UPLOADS, MINIO_BUCKET_PROCESSED
+from ..modules.storage import (
+    get_file_from_minio,
+    upload_file_to_minio,
+    list_files_in_bucket,
+    MINIO_BUCKET_UPLOADS,
+    MINIO_BUCKET_PROCESSED,
+)
 from ..modules.pptx_processor import process_presentation
 from ..modules.progressive_processor import ProgressiveProcessor
 
@@ -132,4 +139,3 @@ async def download_processed(job_id: str, file_id: str = Query(default="")):
         media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
         headers={"Content-Disposition": f"attachment; filename=timeline-{job_id}.pptx"},
     )
-

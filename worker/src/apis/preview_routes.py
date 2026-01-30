@@ -1,4 +1,5 @@
 """preview generation endpoints with sidebar applied"""
+
 import io
 import logging
 
@@ -48,7 +49,9 @@ def generate_preview_pdf(file_id: str, prs: Presentation, request: PreviewReques
     return convert_pptx_to_pdf_bytes(f"preview-{file_id}", preview_buffer.getvalue())
 
 
-@router.post("/get-preview-thumbnail/{file_id}/{slide_index}", response_model=ThumbnailResponse, summary="Get preview with sidebar")
+@router.post(
+    "/get-preview-thumbnail/{file_id}/{slide_index}", response_model=ThumbnailResponse, summary="Get preview with sidebar"
+)
 async def get_preview_thumbnail(file_id: str, slide_index: int, request: PreviewRequest):
     """generate a preview thumbnail showing how the slide will look with sidebar applied"""
     logger.info(f"generating preview for file {file_id}, slide {slide_index}")
@@ -75,7 +78,9 @@ async def get_preview_thumbnail(file_id: str, slide_index: int, request: Preview
     return ThumbnailResponse(slide_index=slide_index, image_base64=img_str)
 
 
-@router.post("/get-all-preview-thumbnails/{file_id}", response_model=AllPreviewsResponse, summary="Get all previews with sidebar")
+@router.post(
+    "/get-all-preview-thumbnails/{file_id}", response_model=AllPreviewsResponse, summary="Get all previews with sidebar"
+)
 async def get_all_preview_thumbnails(file_id: str, request: PreviewRequest):
     """generate all preview thumbnails with sidebar applied in a single request"""
     logger.info(f"generating all preview thumbnails for file {file_id}")
@@ -103,4 +108,3 @@ async def get_all_preview_thumbnails(file_id: str, request: PreviewRequest):
 def get_preview_cache() -> PdfCache:
     """expose preview cache for cleanup from other modules"""
     return preview_cache
-

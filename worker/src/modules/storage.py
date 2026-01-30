@@ -1,4 +1,5 @@
 """minio storage utilities for file operations"""
+
 import io
 import logging
 import os
@@ -70,11 +71,7 @@ def store_cached_pdf(file_id: str, pdf_bytes: bytes):
     """store pdf in minio cache for fast thumbnail generation"""
     pdf_key = f"{file_id}.pdf"
     minio_client.put_object(
-        MINIO_BUCKET_PDF_CACHE,
-        pdf_key,
-        io.BytesIO(pdf_bytes),
-        length=len(pdf_bytes),
-        content_type="application/pdf"
+        MINIO_BUCKET_PDF_CACHE, pdf_key, io.BytesIO(pdf_bytes), length=len(pdf_bytes), content_type="application/pdf"
     )
     logger.info(f"cached pdf for {file_id} ({len(pdf_bytes)} bytes)")
 
