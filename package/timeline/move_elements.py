@@ -140,12 +140,12 @@ def set_morph_transitions(ppt, config=None):
 
         cSld = sld.find(QName(ns_p, "cSld"))
         clrMapOvr = sld.find(QName(ns_p, "clrMapOvr"))
-
+        idx = None
         if clrMapOvr is not None:
             idx = list(sld).index(clrMapOvr) + 1
-        elif cSld is not None:
+        if idx is None and cSld is not None:
             idx = list(sld).index(cSld) + 1
-        else:
+        if idx is None:
             continue
 
         nsmap = {"mc": ns_mc, "p": ns_p, "p14": ns_p14, "p172": ns_p172}
@@ -153,7 +153,7 @@ def set_morph_transitions(ppt, config=None):
         alt_content = Element(QName(ns_mc, "AlternateContent"), nsmap=nsmap)
 
         choice = SubElement(alt_content, QName(ns_mc, "Choice"))
-        choice.set("Requires", "p159")
+        choice.set("Requires", "p172")
 
         trans_choice = SubElement(choice, QName(ns_p, "transition"))
         trans_choice.set(QName(ns_p14, "dur"), str(int(config.transition_duration * 1000)))
