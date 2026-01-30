@@ -10,6 +10,13 @@ import {
   type FileMetadata,
 } from '@/lib/api';
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+}
+
 export default function Manage() {
   const [files, setFiles] = useState<FileMetadata[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,9 +95,6 @@ export default function Manage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col gap-8 bg-zinc-50 p-6 dark:bg-black sm:p-12">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">Manage PPTX</h1>
-      </div>
 
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {/* Upload Slot */}
@@ -128,7 +132,7 @@ export default function Manage() {
                   {file.filename}
                 </p>
                 <p className="mt-1 text-xs text-zinc-500">
-                  {(file.size / 1024).toFixed(1)} KB
+                  {formatFileSize(file.size)}
                 </p>
               </div>
             </div>
